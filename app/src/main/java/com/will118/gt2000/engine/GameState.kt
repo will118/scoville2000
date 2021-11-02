@@ -97,6 +97,13 @@ class GameState {
         }
     }
 
+    fun buyAreaUpgrade(desiredArea: Area) {
+        if (deductPurchaseCost(desiredArea)) {
+            dirtyArea = desiredArea
+            _area.value = desiredArea
+        }
+    }
+
     private fun deductPurchaseCost(upgrade: Purchasable): Boolean {
         val cost = upgrade.cost!!.total
         if (dirtyBalance >= cost) {

@@ -1,5 +1,6 @@
 package com.will118.gt2000.engine
 
+import Area
 import Light
 import Medium
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,6 +19,7 @@ data class Compost(val plant: Plant) : GameOperation
 data class PlantSeed(val seed: Seed) : GameOperation
 data class UpgradeLight(val light: Light) : GameOperation
 data class UpgradeMedium(val medium: Medium) : GameOperation
+data class UpgradeArea(val area: Area) : GameOperation
 
 @ExperimentalCoroutinesApi
 class GameStateExecutor(private val gameState: GameState, private val onGameOver: () -> Unit) {
@@ -48,6 +50,7 @@ class GameStateExecutor(private val gameState: GameState, private val onGameOver
                     is SellProduce -> gameState.sellProduce(operation.plantType)
                     is UpgradeLight -> gameState.buyLightUpgrade(operation.light)
                     is UpgradeMedium -> gameState.buyMediumUpgrade(operation.medium)
+                    is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
                 }
             }
         }

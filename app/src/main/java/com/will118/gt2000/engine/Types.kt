@@ -1,9 +1,33 @@
-enum class Area(val dimension: Int) {
-    WindowSill(1),
-    Bedroom(2),
-    SpareRoom(4),
-    Apartment(8),
-    Warehouse(16);
+enum class Area(
+    val dimension: Int,
+    override val displayName: String,
+    override val cost: Currency?,
+): Describe, Purchasable {
+    WindowSill(
+        dimension = 1,
+        displayName = "Window Sill",
+        cost = null,
+    ),
+    Bedroom(
+        dimension = 2,
+        displayName = "Bedroom",
+        cost = Currency(2_000),
+    ),
+    SpareRoom(
+        dimension = 4,
+        displayName = "Spare Room",
+        cost = Currency(6_000)
+    ),
+    Apartment(
+        dimension = 8,
+        displayName = "Apartment",
+        cost = Currency(30_000)
+    ),
+    Warehouse(
+        dimension = 16,
+        displayName = "Warehouse",
+        cost = Currency(250_000),
+    );
 
     val total = dimension * dimension
 }
@@ -64,13 +88,13 @@ enum class Medium(
         effectiveness = 2,
         litresPerTick = 1,
         displayName = "Soil + Perlite",
-        cost = Currency(1_000L),
+        cost = Currency(1_000),
     ),
     Hydroponics(
         effectiveness = 4,
         litresPerTick = 1,
         displayName = "Hydroponics",
-        cost = Currency(100_000L),
+        cost = Currency(100_000),
     )
 }
 
@@ -80,4 +104,3 @@ enum class Costs(val cost: Int) {
 }
 
 data class Currency(var total: Long)
-

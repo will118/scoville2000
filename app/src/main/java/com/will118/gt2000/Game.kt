@@ -1,5 +1,6 @@
 package com.will118.gt2000
 
+import Area
 import Describe
 import Light
 import Medium
@@ -54,7 +55,7 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
         )) {
         PlantControl(
             plants = gameState.plants,
-            maxCapacity = gameState.area.value.total,
+            area = gameState.area.value,
             date = date.value!!,
             harvest = { gameStateExecutor.enqueue(Harvest(it)) },
             compost = { gameStateExecutor.enqueue(Compost(it)) },
@@ -74,9 +75,13 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
         )
         Divider(modifier = dividerPadding)
         ShopControl(
+            currentLight = gameState.light.value,
+            currentArea = gameState.area.value,
+            currentMedium = gameState.medium.value,
             plantSeed = { gameStateExecutor.enqueue(PlantSeed(it)) },
             upgradeLight = { gameStateExecutor.enqueue(UpgradeLight(it)) },
-            upgradeMedium = { gameStateExecutor.enqueue(UpgradeMedium(it)) }
+            upgradeMedium = { gameStateExecutor.enqueue(UpgradeMedium(it)) },
+            upgradeArea = { gameStateExecutor.enqueue(UpgradeArea(it)) },
         )
     }
 }
@@ -84,12 +89,17 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
 
 @Composable
 fun ShopControl(
+    currentLight: Light,
+    currentArea: Area,
+    currentMedium: Medium,
     plantSeed: (Seed) -> Unit,
     upgradeLight: (Light) -> Unit,
     upgradeMedium: (Medium) -> Unit,
+    upgradeArea: (Area) -> Unit,
 ) {
     @Composable
-    fun <T> shopTable(items: Sequence<T>, button: @Composable (T) -> Unit) where T : Describe, T : Purchasable {
+    fun <T> shopTable(items: Sequence<T>, button: @Composable (T) -> Unit)
+        where T : Describe, T : Purchasable {
         Table(
             headers = listOf(null, null, null),
             items = items,
@@ -122,7 +132,11 @@ fun ShopControl(
         Spacer(modifier = Modifier.height(10.dp))
         Text(text = "Seeds", style = Typography.subtitle2)
         Spacer(modifier = Modifier.height(5.dp))
-        shopTable(PlantType.values().filter { it.cost != null }.asSequence()) {
+        shopTable(
+            items = PlantType.values()
+                .filter { it.cost != null }
+                .asSequence()
+        ) {
             TextButton(onClick = { plantSeed(it.toSeed()) }) {
                 Text(
                     text = "Plant",
@@ -132,7 +146,11 @@ fun ShopControl(
         Spacer(modifier = Modifier.height(10.dp))
         Text(text = "Lights", style = Typography.subtitle2)
         Spacer(modifier = Modifier.height(5.dp))
-        shopTable(Light.values().drop(1).asSequence()) {
+        shopTable(
+            items = Light.values()
+                .dropWhile { it.ordinal <= currentLight.ordinal }
+                .asSequence()
+        ) {
             TextButton(onClick = { upgradeLight(it) }) {
                 Text(
                     text = "Upgrade",
@@ -142,8 +160,26 @@ fun ShopControl(
         Spacer(modifier = Modifier.height(10.dp))
         Text(text = "Growth Medium", style = Typography.subtitle2)
         Spacer(modifier = Modifier.height(5.dp))
-        shopTable(Medium.values().drop(1).asSequence()) {
+        shopTable(
+            items = Medium.values()
+                .dropWhile { it.ordinal <= currentMedium.ordinal }
+                .asSequence()
+        ) {
             TextButton(onClick = { upgradeMedium(it) }) {
+                Text(
+                    text = "Upgrade",
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(text = "Area", style = Typography.subtitle2)
+        Spacer(modifier = Modifier.height(5.dp))
+        shopTable(
+            items = Area.values()
+                .dropWhile { it.ordinal <= currentArea.ordinal }
+                .asSequence()
+        ) {
+            TextButton(onClick = { upgradeArea(it) }) {
                 Text(
                     text = "Upgrade",
                 )
@@ -285,19 +321,21 @@ fun <T> Table(
 @Composable
 fun PlantControl(
     plants: SnapshotStateList<Plant>,
-    maxCapacity: Int,
+    area: Area,
     date: Instant,
     harvest: (Plant) -> Unit,
     compost: (Plant) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = "Plants ${plants.size}/$maxCapacity", style = Typography.h5)
-        }
+        Text(
+            text = "Plants",
+            style = Typography.h5
+        )
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            text = "${plants.size}/${area.total} (${area.displayName})",
+            style = Typography.subtitle2
+        )
         Spacer(modifier = Modifier.height(10.dp))
         for (plant in plants) {
             val currentPhase = plant.currentPhase(date)
