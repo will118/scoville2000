@@ -1,3 +1,6 @@
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class Area(
     val dimension: Int,
     override val displayName: String,
@@ -40,6 +43,7 @@ interface Purchasable {
     val cost: Currency?
 }
 
+@Serializable
 enum class Light(
     val strength: Int,
     val joulesPerTick: Int,
@@ -72,6 +76,7 @@ enum class Light(
     )
 }
 
+@Serializable
 enum class Medium(
     val effectiveness: Int,
     val litresPerTick: Int,
@@ -103,4 +108,5 @@ enum class Costs(val cost: Int) {
     WaterLitre(cost = 10)
 }
 
+@Serializable
 data class Currency(var total: Long)

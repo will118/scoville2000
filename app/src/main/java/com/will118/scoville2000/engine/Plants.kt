@@ -3,9 +3,11 @@ package com.will118.scoville2000.engine
 import Currency
 import Describe
 import Purchasable
+import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.Instant
 
+@Serializable
 enum class PlantType(
     override val displayName: String,
     val scovilles: Long,
@@ -52,14 +54,20 @@ enum class PlantType(
     fun toSeed() = Seed(this)
 }
 
+@Serializable
 data class Plant(
     val plantType: PlantType,
-    val epoch: Instant,
-    val position: Int) {
-    fun currentPhase(currentInstant: Instant) =
-        plantType.phases.currentPhase(Duration.between(epoch, currentInstant))
+    val epochMillis: Long,
+) {
+    fun currentPhase(currentEpochMillis: Long) =
+        plantType.phases.currentPhase(
+            Duration.between(
+                Instant.ofEpochMilli(epochMillis),
+                Instant.ofEpochMilli(currentEpochMillis),
+            )
+        )
 
-    fun isRipe(currentInstant: Instant) = currentPhase(currentInstant)?.isRipe ?: false
+    fun isRipe(currentEpochMillis: Long) = currentPhase(currentEpochMillis)?.isRipe ?: false
 
     fun harvest() = 15L
 }

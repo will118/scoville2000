@@ -43,7 +43,7 @@ import java.time.format.FormatStyle
 @Composable
 fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
     val balance = gameState.balance.observeAsState()
-    val date = gameState.date.observeAsState()
+    val dateMillis = gameState.dateMillis.observeAsState()
     val inventory = gameState.inventory
 
     val dividerPadding = Modifier.padding(vertical = 15.dp)
@@ -58,7 +58,7 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
         PlantControl(
             plants = gameState.plants,
             area = gameState.area,
-            date = date,
+            dateMillis = dateMillis,
             harvest = { gameStateExecutor.enqueue(Harvest(it)) },
             compost = { gameStateExecutor.enqueue(Compost(it)) },
         )
@@ -70,7 +70,7 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
         Divider(modifier = dividerPadding)
         StatsControl(
             balance = balance.value,
-            date = date,
+            dateMillis = dateMillis,
             light = gameState.light.value,
             medium = gameState.medium.value,
             buyer = gameState.buyer,
@@ -180,12 +180,15 @@ fun ShopControl(
 @Composable
 fun StatsControl(
     balance: Long?,
-    date: State<Instant?>,
+    dateMillis: State<Long?>,
     light: Light,
     medium: Medium,
     buyer: Buyer,
 ) {
-    val dateTime = OffsetDateTime.ofInstant(date.value!!, ZoneId.systemDefault())
+    val dateTime = OffsetDateTime.ofInstant(
+        Instant.ofEpochMilli(dateMillis.value!!),
+        ZoneId.systemDefault()
+    )
 
     Column {
         Text(text = "Info", style = Typography.h5)
@@ -314,7 +317,7 @@ fun <T> Table(
 fun PlantControl(
     plants: SnapshotStateList<Plant?>,
     area: State<Area>,
-    date: State<Instant?>,
+    dateMillis: State<Long?>,
     harvest: (Plant) -> Unit,
     compost: (Plant) -> Unit,
 ) {
@@ -332,7 +335,7 @@ fun PlantControl(
         PlantGrid(
             area = area,
             plants = plants,
-            date = date,
+            dateMillis = dateMillis,
             harvest = harvest,
             compost = compost
         )

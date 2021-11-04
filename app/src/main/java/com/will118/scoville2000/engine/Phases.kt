@@ -1,7 +1,9 @@
 package com.will118.scoville2000.engine
 
+import kotlinx.serialization.Serializable
 import java.time.Duration
 
+@Serializable
 enum class PhaseNames(val displayName: String) {
     Sprout("Sprout"),
     Seedling("Seedling"),
@@ -14,40 +16,41 @@ enum class PhaseNames(val displayName: String) {
         get() = this == Ripening
 }
 
+@Serializable
 data class Phases(
-    val sprout: Duration,
-    val seedling: Duration,
-    val vegetative: Duration,
-    val budding: Duration,
-    val flowering: Duration,
-    val ripening: Duration,
+    private val sproutDays: Int,
+    private val seedlingDays: Int,
+    private val vegetativeDays: Int,
+    private val buddingDays: Int,
+    private val floweringDays: Int,
+    private val ripeningDays: Int,
 ) {
     companion object {
         val DEFAULT = Phases(
-            sprout = Duration.ofDays(7),
-            seedling = Duration.ofDays(20),
-            vegetative = Duration.ofDays(40),
-            budding = Duration.ofDays(7),
-            flowering = Duration.ofDays(7),
-            ripening = Duration.ofDays(7),
+            sproutDays = 7,
+            seedlingDays = 20,
+            vegetativeDays = 40,
+            buddingDays = 7,
+            floweringDays = 7,
+            ripeningDays = 7,
         )
     }
 
     private val orderedPhases = listOf(
-        Pair(sprout, PhaseNames.Sprout),
-        Pair(seedling, PhaseNames.Seedling),
-        Pair(vegetative, PhaseNames.Vegetative),
-        Pair(budding, PhaseNames.Budding),
-        Pair(flowering, PhaseNames.Flowering),
-        Pair(ripening, PhaseNames.Ripening),
+        Pair(sproutDays, PhaseNames.Sprout),
+        Pair(seedlingDays, PhaseNames.Seedling),
+        Pair(vegetativeDays, PhaseNames.Vegetative),
+        Pair(buddingDays, PhaseNames.Budding),
+        Pair(floweringDays, PhaseNames.Flowering),
+        Pair(ripeningDays, PhaseNames.Ripening),
     )
 
     fun currentPhase(elapsed: Duration): PhaseNames? {
-        var remaining = elapsed
+        var remaining = elapsed.toDays()
 
-        for ((phase, phaseName) in orderedPhases) {
-            remaining = remaining.minus(phase)
-            if (remaining.isNegative || remaining.isZero) {
+        for ((phaseDays, phaseName) in orderedPhases) {
+            remaining -= phaseDays
+            if (remaining <= 0) {
                 return phaseName
             }
         }

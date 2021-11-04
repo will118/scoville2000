@@ -17,7 +17,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntSize
 import com.will118.scoville2000.engine.PhaseNames
 import com.will118.scoville2000.engine.Plant
-import java.time.Instant
 import kotlin.math.floor
 
 private fun getTappedPlant(
@@ -37,7 +36,7 @@ private fun getTappedPlant(
 fun PlantGrid(
     area: State<Area>,
     plants: SnapshotStateList<Plant?>,
-    date: State<Instant?>,
+    dateMillis: State<Long?>,
     harvest: (Plant) -> Unit,
     compost: (Plant) -> Unit,
 ) {
@@ -53,7 +52,7 @@ fun PlantGrid(
                     area = area.value,
                     plants = plants,
                 )?.let {
-                    val phase = it.currentPhase(date.value!!)
+                    val phase = it.currentPhase(dateMillis.value!!)
 
                     if (phase?.isRipe == true) {
                         harvest(it)
@@ -99,7 +98,7 @@ fun PlantGrid(
         val lines = Integer.max(1, area.value.dimension)
         val step = canvasHeight / lines
 
-        for (i in (1 until lines + 1)) {
+        for (i in (1 until lines)) {
             val offset = step * i
             drawLine(
                 start = Offset(x = 0f, y = offset),
@@ -118,7 +117,7 @@ fun PlantGrid(
 
         for (plant in plants.withIndex().filter { it.value != null }) {
             drawRect(
-                color = when (plant.value!!.currentPhase(date.value!!)) {
+                color = when (plant.value!!.currentPhase(dateMillis.value!!)) {
                     PhaseNames.Sprout -> Color.hsv(92f, 0.5f, 0.98f)
                     PhaseNames.Seedling -> Color.hsv(93f, 0.29f, 0.88f)
                     PhaseNames.Vegetative -> Color.hsv(93f, 0.60f, 0.78f)
