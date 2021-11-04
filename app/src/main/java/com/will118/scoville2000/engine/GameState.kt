@@ -1,16 +1,18 @@
-package com.will118.gt2000.engine
+package com.will118.scoville2000.engine
 
 import Area
 import Costs
 import Light
 import Medium
 import Purchasable
+import android.util.Log
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import java.time.Instant
+import java.util.*
 
 data class StockLevel(var seeds: Long, var peppers: Long)
 
@@ -31,12 +33,12 @@ class GameState {
         _inventory[PlantType.Evolcano] = StockLevel(seeds = 10, peppers = 500)
     }
 
-    private val _plants = mutableStateListOf<Plant>()
-    val plants: SnapshotStateList<Plant> by ::_plants
-
-    private var dirtyArea = Area.WindowSill
+    private var dirtyArea = Area.SpareRoom
     private val _area = mutableStateOf(dirtyArea)
     val area: State<Area> by ::_area
+
+    private val _plants = Collections.nCopies(dirtyArea.total, null as Plant?).toMutableStateList()
+    val plants: SnapshotStateList<Plant?> by ::_plants
 
     private var dirtyLight = Light.Ambient
     private val _light = mutableStateOf(dirtyLight)
@@ -69,11 +71,15 @@ class GameState {
                     StockLevel(seeds = 0, peppers = plant.harvest())
                 }
             }
-            plants.remove(plant)
+            Log.i(TAG, "Harvested: $plant")
+            _plants[_plants.indexOf(plant)] = null
         }
     }
 
-    fun compost(plant: Plant) = plants.remove(plant)
+    fun compost(plant: Plant) {
+        _plants[_plants.indexOf(plant)] = null
+    }
+
 
     fun sellProduce(plantType: PlantType) {
         _inventory[plantType]?.let {
@@ -99,6 +105,7 @@ class GameState {
 
     fun buyAreaUpgrade(desiredArea: Area) {
         if (deductPurchaseCost(desiredArea)) {
+            _plants.addAll(Collections.nCopies(desiredArea.total - dirtyArea.total, null))
             dirtyArea = desiredArea
             _area.value = desiredArea
         }
@@ -115,15 +122,13 @@ class GameState {
     }
 
     fun plantSeed(seed: Seed) {
-        if (_plants.size < dirtyArea.total) {
-            if (deductPurchaseCost(seed.plantType)) {
-                _plants.add(
-                    Plant(
-                        plantType = seed.plantType,
-                        epoch = dirtyDate,
-                    )
-                )
-            }
+        val index = _plants.indexOfFirst { it == null }
+        if (index >= 0 && deductPurchaseCost(seed.plantType)) {
+            _plants[index] = Plant(
+                plantType = seed.plantType,
+                epoch = dirtyDate,
+                position = 1
+            )
         }
     }
 

@@ -1,4 +1,4 @@
-package com.will118.gt2000
+package com.will118.scoville2000
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

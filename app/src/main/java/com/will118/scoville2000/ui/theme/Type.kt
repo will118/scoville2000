@@ -1,4 +1,4 @@
-package com.will118.gt2000.ui.theme
+package com.will118.scoville2000.ui.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

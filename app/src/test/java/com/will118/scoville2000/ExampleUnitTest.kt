@@ -1,4 +1,4 @@
-package com.will118.gt2000
+package com.will118.scoville2000
 
 import org.junit.Test
 

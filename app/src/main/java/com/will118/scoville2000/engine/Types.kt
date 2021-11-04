@@ -5,7 +5,7 @@ enum class Area(
 ): Describe, Purchasable {
     WindowSill(
         dimension = 1,
-        displayName = "Window Sill",
+        displayName = "Windowsill",
         cost = null,
     ),
     Bedroom(

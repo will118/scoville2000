@@ -1,4 +1,4 @@
-package com.will118.gt2000.engine
+package com.will118.scoville2000.engine
 
 import Currency
 import Describe
@@ -52,7 +52,10 @@ enum class PlantType(
     fun toSeed() = Seed(this)
 }
 
-data class Plant(val plantType: PlantType, val epoch: Instant) {
+data class Plant(
+    val plantType: PlantType,
+    val epoch: Instant,
+    val position: Int) {
     fun currentPhase(currentInstant: Instant) =
         plantType.phases.currentPhase(Duration.between(epoch, currentInstant))
 

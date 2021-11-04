@@ -1,4 +1,4 @@
-package com.will118.gt2000.engine
+package com.will118.scoville2000.engine
 
 import java.time.Duration
 
@@ -29,7 +29,7 @@ data class Phases(
             vegetative = Duration.ofDays(40),
             budding = Duration.ofDays(7),
             flowering = Duration.ofDays(7),
-            ripening = Duration.ofDays(7)
+            ripening = Duration.ofDays(7),
         )
     }
 
