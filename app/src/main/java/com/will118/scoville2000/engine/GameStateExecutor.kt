@@ -28,7 +28,7 @@ class GameStateExecutor(
         const val SAVE_PERIOD = 1_000L
     }
 
-    private val channel = Channel<GameOperation>()
+    private val channel = Channel<GameOperation>(Channel.UNLIMITED)
 
     private suspend fun tickLoop() {
         while (!channel.isClosedForSend) {

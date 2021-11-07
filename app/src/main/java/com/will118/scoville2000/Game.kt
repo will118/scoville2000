@@ -1,11 +1,11 @@
 package com.will118.scoville2000
 
 import Area
+import Currency
 import Describe
 import Light
 import Medium
 import Purchasable
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -45,7 +45,7 @@ import java.time.format.FormatStyle
 @Composable
 fun Game(
     area: Area,
-    balance: Long,
+    balance: Currency,
     buyer: Buyer,
     dateMillis: Long,
     light: Light,
@@ -61,8 +61,6 @@ fun Game(
     plantSeed: (Seed) -> Unit,
 ) {
     val dividerPadding = Modifier.padding(vertical = 15.dp)
-
-    Log.i("Game", "$dateMillis")
 
     Column(modifier = Modifier
         .padding(10.dp)
@@ -124,7 +122,7 @@ fun ShopControl(
             renderItem = { column, item ->
                 when (column.index) {
                     0 -> TableCellText(text = item.displayName)
-                    1 -> TableCellText(text = "$${item.cost!!.total}")
+                    1 -> TableCellText(text = item.cost!!.toString())
                     2 -> button(item)
                 }
             }
@@ -206,7 +204,7 @@ fun StatText(name: String, value: String) {
 
 @Composable
 fun StatsControl(
-    balance: Long,
+    balance: Currency,
     dateMillis: Long,
     light: Light,
     medium: Medium,
@@ -227,7 +225,7 @@ fun StatsControl(
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
             name = "Balance",
-            value = "$${balance}",
+            value = balance.toString(),
         )
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
@@ -242,7 +240,7 @@ fun StatsControl(
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
             name = "Price per pepper",
-            value = "$${buyer.pricePerScoville} (${buyer.name})",
+            value = "${buyer.pricePerScoville} (${buyer.name})",
         )
     }
 }
@@ -281,7 +279,7 @@ fun InventoryControl(
         Spacer(modifier = Modifier.height(10.dp))
         Table(
             headers = listOf("Type", "Peppers", ""),
-            items = inventory.asSequence(),
+            items = inventory.asSequence().filter { it.value.peppers > 0 },
             renderItem = { column, item ->
                 when (column.index) {
                     0 -> TableCellText(text = item.key.displayName)
@@ -322,7 +320,10 @@ fun <T> Table(
                             .height(25.dp),
                         contentColor = Color.Transparent,
                     ) {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
                                 text = it,
                                 fontSize = 14.sp,
@@ -336,8 +337,20 @@ fun <T> Table(
                     }
                 }
 
-                // TODO don't iterate 4 times
-                for (item in items) {
+                if (items.any()) {
+                    // TODO don't iterate 4 times
+                    for (item in items) {
+                        Surface(
+                            border = BorderStroke(1.dp, Color.LightGray),
+                            contentColor = Color.Transparent,
+                            modifier = Modifier
+                                .height(35.dp)
+                                .fillMaxWidth()
+                        ) {
+                            renderItem(column, item)
+                        }
+                    }
+                } else {
                     Surface(
                         border = BorderStroke(1.dp, Color.LightGray),
                         contentColor = Color.Transparent,
@@ -345,7 +358,7 @@ fun <T> Table(
                             .height(35.dp)
                             .fillMaxWidth()
                     ) {
-                        renderItem(column, item)
+                        Box(modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }

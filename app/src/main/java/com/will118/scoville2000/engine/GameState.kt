@@ -2,6 +2,7 @@ package com.will118.scoville2000.engine
 
 import Area
 import Costs
+import Currency
 import Light
 import Medium
 import Purchasable
@@ -26,7 +27,7 @@ class GameState(private val gameStateData: GameStateData) {
     }
 
     private val _balance = MutableLiveData(gameStateData.balance)
-    val balance: LiveData<Long> by ::_balance
+    val balance: LiveData<Currency> by ::_balance
 
     private val _inventory = gameStateData.inventory.toMutableStateMap()
     val inventory: SnapshotStateMap<PlantType, StockLevel> by ::_inventory
@@ -51,7 +52,11 @@ class GameState(private val gameStateData: GameStateData) {
     var buyer = Buyer.Friends
         private set
 
+    val id: GameId
+        get() = gameStateData.id
+
     fun harvest(plantPot: PlantPot) {
+        println("Harvesting $plantPot")
         plantPot.plant?.let { plant ->
             if (plant.isRipe(gameStateData.dateMillis)) {
                 _inventory.compute(plant.plantType) { _, stock ->
@@ -74,7 +79,10 @@ class GameState(private val gameStateData: GameStateData) {
     fun sellProduce(plantType: PlantType) {
         _inventory[plantType]?.let {
             _inventory[plantType] = StockLevel(peppers = 0)
-            gameStateData.balance += buyer.total(plantType = plantType, peppers = it.peppers)
+            gameStateData.balance = gameStateData.balance.copy(
+                total = gameStateData.balance.total
+                    .plus(buyer.total(plantType = plantType, peppers = it.peppers))
+            )
             _balance.postValue(gameStateData.balance)
         }
     }
@@ -105,8 +113,10 @@ class GameState(private val gameStateData: GameStateData) {
 
     private fun deductPurchaseCost(upgrade: Purchasable): Boolean {
         val cost = upgrade.cost!!.total
-        if (gameStateData.balance >= cost) {
-            gameStateData.balance -= cost
+        if (gameStateData.balance.total >= cost) {
+            gameStateData.balance = gameStateData.balance.copy(
+                total = gameStateData.balance.total - cost
+            )
             return true
         }
 
@@ -149,11 +159,13 @@ class GameState(private val gameStateData: GameStateData) {
             gameStateData.milliCounter -= MILLIS_PER_COST_TICK
 
             calculateCosts().also {
-                if (it > gameStateData.balance) {
+                if (it > gameStateData.balance.total) {
                     return true
                 }
 
-                gameStateData.balance -= it
+                gameStateData.balance = gameStateData.balance.copy(
+                    total = gameStateData.balance.total - it
+                )
             }
         }
 

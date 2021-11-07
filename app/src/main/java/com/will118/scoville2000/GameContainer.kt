@@ -1,5 +1,6 @@
 package com.will118.scoville2000
 
+import Currency
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,18 +18,18 @@ fun GameContainer(
     gameStateExecutor: GameStateExecutor,
     onGameOver: () -> Unit,
 ) {
-    LaunchedEffect(key1 = "executorLoop", block = {
+    LaunchedEffect(key1 = gameState.id, block = {
         gameStateExecutor.loop(onGameOver)
     })
 
-    val dateMillis = gameState.dateMillis.observeAsState()
-    val balance = gameState.balance.observeAsState()
+    val dateMillis = gameState.dateMillis.observeAsState(0)
+    val balance = gameState.balance.observeAsState(Currency(0))
 
     Game(
         area = gameState.area.value,
-        balance = balance.value ?: 0,
+        balance = balance.value,
         buyer = gameState.buyer,
-        dateMillis = dateMillis.value ?: 0,
+        dateMillis = dateMillis.value,
         light = gameState.light.value,
         medium = gameState.medium.value,
         plantPots = gameState.plantPots,

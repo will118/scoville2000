@@ -1,15 +1,28 @@
 package com.will118.scoville2000.engine
 
 import Area
+import Currency
 import Light
 import Medium
 import kotlinx.serialization.Serializable
 import java.time.Instant
+import java.util.*
+
+@Serializable
+data class GameId(val msb: Long, val lsb: Long) {
+    companion object {
+        fun fromUUID(uuid: UUID) = GameId(
+            msb = uuid.mostSignificantBits,
+            lsb = uuid.leastSignificantBits,
+        )
+    }
+}
 
 @Serializable
 data class GameStateData(
-    var balance: Long = 150,
-    var area: Area = Area.SpareRoom,
+    val id: GameId = GameId.fromUUID(UUID.randomUUID()),
+    var balance: Currency = Currency(150),
+    var area: Area = Area.WindowSill,
     var light: Light = Light.Ambient,
     var medium: Medium = Medium.Soil,
     var milliCounter: Long = 0, // Used for calculating costs

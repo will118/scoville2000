@@ -109,4 +109,8 @@ enum class Costs(val cost: Int) {
 }
 
 @Serializable
-data class Currency(var total: Long)
+data class Currency(val total: Long) {
+    override fun toString(): String {
+        return "₡${total}"
+    }
+}

@@ -25,10 +25,9 @@ import com.will118.scoville2000.engine.GameState
 import com.will118.scoville2000.engine.GameStateData
 import com.will118.scoville2000.engine.GameStateExecutor
 import com.will118.scoville2000.ui.theme.Gt2000Theme
-import kotlinx.coroutines.GlobalScope
+import com.will118.scoville2000.ui.theme.Typography
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -36,6 +35,9 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import java.io.InputStream
 import java.io.OutputStream
 
+@DelicateCoroutinesApi
+@ExperimentalCoroutinesApi
+@ExperimentalSerializationApi
 class MainActivity : ComponentActivity() {
     private val Context.dataStore: DataStore<GameStateData> by dataStore(
         "game-state-data",
@@ -83,26 +85,22 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Routes.GameOver) {
-                            Row(
+                            Column(
                                 modifier = Modifier.fillMaxSize(),
-                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    Text(text = "Game Over")
-                                    Spacer(modifier = Modifier.height(20.dp))
-                                    Button(onClick = {
-                                        runBlocking {
-                                            applicationContext.dataStore.updateData {
-                                                GameStateData()
-                                            }
+                                Text(text = "Game Over", style = Typography.h3)
+                                Spacer(modifier = Modifier.height(40.dp))
+                                Button(onClick = {
+                                    runBlocking {
+                                        applicationContext.dataStore.updateData {
+                                            GameStateData()
                                         }
-                                        navController.navigate(Routes.Game)
-                                    }) {
-                                        Text(text = "Restart")
                                     }
+                                    navController.navigate(Routes.Game)
+                                }) {
+                                    Text(text = "Restart")
                                 }
                             }
                         }
