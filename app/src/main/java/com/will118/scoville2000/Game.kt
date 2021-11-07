@@ -239,8 +239,8 @@ fun StatsControl(
         )
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
-            name = "Price per pepper",
-            value = "${buyer.pricePerScoville} (${buyer.name})",
+            name = "Price",
+            value = "${buyer.pricePerScoville}/milliscoville (${buyer.displayName})",
         )
     }
 }

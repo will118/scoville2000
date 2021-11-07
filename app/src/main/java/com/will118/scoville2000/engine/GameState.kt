@@ -56,7 +56,6 @@ class GameState(private val gameStateData: GameStateData) {
         get() = gameStateData.id
 
     fun harvest(plantPot: PlantPot) {
-        println("Harvesting $plantPot")
         plantPot.plant?.let { plant ->
             if (plant.isRipe(gameStateData.dateMillis)) {
                 _inventory.compute(plant.plantType) { _, stock ->

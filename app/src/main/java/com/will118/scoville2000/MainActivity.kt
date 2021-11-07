@@ -10,6 +10,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
@@ -49,20 +50,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val gameStateData = runBlocking {
-            applicationContext.dataStore.data.first()
-        }
-
-        val gameState = GameState(gameStateData.copy())
-        val gameStateExecutor = GameStateExecutor(
-            gameState = gameState,
-            onSaveTick = { updated ->
-                applicationContext.dataStore.updateData {
-                    updated
-                }
-            },
-        )
-
         setContent {
             val navController = rememberNavController()
 
@@ -72,6 +59,24 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Routes.Game) {
                         composable(Routes.Game) {
+                            val gameStateData = runBlocking {
+                                applicationContext.dataStore.data.first()
+                            }
+
+                            val (gameState, gameStateExecutor) = remember(gameStateData.id) {
+                                val gameState = GameState(gameStateData.copy())
+                                val gameStateExecutor = GameStateExecutor(
+                                    gameState = gameState,
+                                    onSaveTick = { updated ->
+                                        applicationContext.dataStore.updateData {
+                                            updated
+                                        }
+                                    },
+                                )
+
+                                Pair(gameState, gameStateExecutor)
+                            }
+
                             GameContainer(
                                 gameState = gameState,
                                 gameStateExecutor = gameStateExecutor,

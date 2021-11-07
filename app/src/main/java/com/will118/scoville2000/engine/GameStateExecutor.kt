@@ -30,50 +30,50 @@ class GameStateExecutor(
 
     private val channel = Channel<GameOperation>(Channel.UNLIMITED)
 
-    private suspend fun tickLoop() {
-        while (!channel.isClosedForSend) {
-            channel.send(Tick)
-            delay(timeMillis = TICK_PERIOD)
+    private suspend fun executorLoop(): Boolean {
+        when (val operation = channel.receive()) {
+            is Save -> onSaveTick(gameState.snapshot())
+            is Tick -> {
+                if (gameState.onTick()) {
+                    return false
+                }
+            }
+            is Harvest -> gameState.harvest(operation.plantPot)
+            is Compost -> gameState.compost(operation.plantPot)
+            is PlantSeed -> gameState.plantSeed(operation.seed)
+            is SellProduce -> gameState.sellProduce(operation.plantType)
+            is UpgradeLight -> gameState.buyLightUpgrade(operation.light)
+            is UpgradeMedium -> gameState.buyMediumUpgrade(operation.medium)
+            is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
         }
+
+        return true
     }
 
-    private suspend fun saveLoop() {
-        while (!channel.isClosedForSend) {
-            channel.send(Save)
-            delay(timeMillis = SAVE_PERIOD)
-        }
-    }
-
-    private suspend fun executorLoop(onGameOver: () -> Unit) {
-        while (!channel.isClosedForReceive) {
-            when (val operation = channel.receive()) {
-                is Save -> onSaveTick(gameState.snapshot())
-                is Tick -> {
-                    if (gameState.onTick()) {
+    suspend fun loop(onGameOver: () -> Unit): Job {
+        return coroutineScope {
+            launch {
+                while (isActive && !channel.isClosedForReceive) {
+                    if (!executorLoop()) {
+                        channel.close()
                         onGameOver()
                     }
                 }
-                is Harvest -> gameState.harvest(operation.plantPot)
-                is Compost -> gameState.compost(operation.plantPot)
-                is PlantSeed -> gameState.plantSeed(operation.seed)
-                is SellProduce -> gameState.sellProduce(operation.plantType)
-                is UpgradeLight -> gameState.buyLightUpgrade(operation.light)
-                is UpgradeMedium -> gameState.buyMediumUpgrade(operation.medium)
-                is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
             }
-        }
-    }
 
-    suspend fun loop(onGameOver: () -> Unit) {
-        coroutineScope {
             launch {
-                executorLoop {
-                    channel.close()
-                    onGameOver()
+                while (isActive && !channel.isClosedForSend) {
+                    channel.send(Tick)
+                    delay(timeMillis = TICK_PERIOD)
                 }
             }
-            launch { saveLoop() }
-            launch { tickLoop() }
+
+            launch {
+                while (isActive && !channel.isClosedForSend) {
+                    channel.send(Save)
+                    delay(timeMillis = SAVE_PERIOD)
+                }
+            }
         }
     }
 
