@@ -24,25 +24,25 @@ enum class PlantType(
         displayName = "Poblano",
         scovilles = 1_250,
         phases = Phases.DEFAULT,
-        cost = Currency(2),
+        cost = Currency(20),
     ),
     Guajillo(
         displayName = "Guajillo",
         scovilles = 3_000,
         phases = Phases.DEFAULT,
-        cost = Currency(5),
+        cost = Currency(50),
     ),
     Jalapeno(
         displayName = "Jalapeño",
         scovilles = 6_000,
         phases = Phases.DEFAULT,
-        cost = Currency(10),
+        cost = Currency(100),
     ),
     BirdsEye(
         displayName = "Bird's Eye",
         scovilles = 75_000,
         phases = Phases.DEFAULT,
-        cost = Currency(20),
+        cost = Currency(200),
     ),
     Evolcano(
         displayName = "Evolcano",
@@ -55,8 +55,13 @@ enum class PlantType(
 }
 
 @Serializable
+data class PlantPot(val plant: Plant?)
+
+@Serializable
 data class Plant(
     val plantType: PlantType,
+    val lightStrength: Int, // Less clear than medium, but lets be consistent
+    val mediumEffectiveness: Int, // Avoid upgrades cheating the system
     val epochMillis: Long,
 ) {
     fun currentPhase(currentEpochMillis: Long) =
@@ -67,9 +72,15 @@ data class Plant(
             )
         )
 
-    fun isRipe(currentEpochMillis: Long) = currentPhase(currentEpochMillis)?.isRipe ?: false
+    fun isGrowing(currentEpochMillis: Long): Boolean {
+        val phase = currentPhase(currentEpochMillis)
+        return !(phase == null || phase.isRipe)
+    }
 
-    fun harvest() = 15L
+    fun isRipe(currentEpochMillis: Long) =
+        currentPhase(currentEpochMillis)?.isRipe ?: false
+
+    fun harvest() = 15L * lightStrength * mediumEffectiveness
 }
 
 data class Seed(val plantType: PlantType)

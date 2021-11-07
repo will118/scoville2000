@@ -15,6 +15,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -23,9 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.will118.scoville2000.engine.*
@@ -42,6 +46,8 @@ import java.time.format.FormatStyle
 @ExperimentalFoundationApi
 @Composable
 fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
+    LaunchedEffect("executorLoop", gameStateExecutor.loop)
+
     val balance = gameState.balance.observeAsState()
     val dateMillis = gameState.dateMillis.observeAsState()
     val inventory = gameState.inventory
@@ -56,7 +62,7 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
             enabled = true
         )) {
         PlantControl(
-            plants = gameState.plants,
+            plantPots = gameState.plantPots,
             area = gameState.area,
             dateMillis = dateMillis,
             harvest = { gameStateExecutor.enqueue(Harvest(it)) },
@@ -178,6 +184,17 @@ fun ShopControl(
 }
 
 @Composable
+fun StatText(name: String, value: String) {
+    Text(buildAnnotatedString {
+        append("$name:")
+        append(" ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
+            append(value)
+        }
+    })
+}
+
+@Composable
 fun StatsControl(
     balance: Long?,
     dateMillis: State<Long?>,
@@ -193,15 +210,30 @@ fun StatsControl(
     Column {
         Text(text = "Info", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Date: ${dateTime.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))}")
+        StatText(
+            name = "Date",
+            value = dateTime.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
+        )
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Balance: $${balance}")
+        StatText(
+            name = "Balance",
+            value = "$${balance}",
+        )
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Light source: ${light.name}")
+        StatText(
+            name = "Light source",
+            value = light.name,
+        )
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Growth medium: ${medium.name}")
+        StatText(
+            name = "Growth medium",
+            value = medium.name,
+        )
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Price per pepper: $${buyer.pricePerScoville} (${buyer.name})")
+        StatText(
+            name = "Price per pepper",
+            value = "$${buyer.pricePerScoville} (${buyer.name})",
+        )
     }
 }
 
@@ -238,14 +270,13 @@ fun InventoryControl(
         Text(text = "Inventory", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
         Table(
-            headers = listOf("Type", "Seeds", "Peppers", ""),
+            headers = listOf("Type", "Peppers", ""),
             items = inventory.asSequence(),
             renderItem = { column, item ->
                 when (column.index) {
                     0 -> TableCellText(text = item.key.displayName)
-                    1 -> TableCellText(text = "${item.value.seeds}")
-                    2 -> TableCellText(text = "${item.value.peppers}")
-                    3 -> {
+                    1 -> TableCellText(text = "${item.value.peppers}")
+                    2 -> {
                         TextButton(onClick = { sell(item.key) }) {
                             Text(
                                 text = "Sell",
@@ -315,11 +346,11 @@ fun <T> Table(
 @ExperimentalGraphicsApi
 @Composable
 fun PlantControl(
-    plants: SnapshotStateList<Plant?>,
+    plantPots: SnapshotStateList<PlantPot>,
     area: State<Area>,
     dateMillis: State<Long?>,
-    harvest: (Plant) -> Unit,
-    compost: (Plant) -> Unit,
+    harvest: (PlantPot) -> Unit,
+    compost: (PlantPot) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -328,13 +359,13 @@ fun PlantControl(
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            text = "${plants.count { it != null }}/${area.value.total} (${area.value.displayName})",
+            text = "${plantPots.count { it.plant != null }}/${area.value.total} (${area.value.displayName})",
             style = Typography.subtitle2
         )
         Spacer(modifier = Modifier.height(10.dp))
         PlantGrid(
             area = area,
-            plants = plants,
+            plantPots = plantPots,
             dateMillis = dateMillis,
             harvest = harvest,
             compost = compost

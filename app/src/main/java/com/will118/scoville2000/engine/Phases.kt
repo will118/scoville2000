@@ -30,8 +30,8 @@ data class Phases(
             sproutDays = 7,
             seedlingDays = 20,
             vegetativeDays = 40,
-            buddingDays = 7,
-            floweringDays = 7,
+            buddingDays = 3,
+            floweringDays = 4,
             ripeningDays = 7,
         )
     }

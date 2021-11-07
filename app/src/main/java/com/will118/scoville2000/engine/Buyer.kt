@@ -9,5 +9,5 @@ enum class Buyer(val pricePerScoville: Long) {
 //    Exchange(pricePerScoville = )
 
     fun total(plantType: PlantType, peppers: Long) =
-        (max(plantType.scovilles, 1) * pricePerScoville) * peppers
+        (max(plantType.scovilles / 1000, 1) * pricePerScoville) * peppers
 }

@@ -5,33 +5,26 @@ import Costs
 import Light
 import Medium
 import Purchasable
-import androidx.compose.runtime.*
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.runtime.toMutableStateList
+import androidx.compose.runtime.toMutableStateMap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.serialization.Serializable
-import java.time.Instant
-import java.util.*
+import java.time.Duration
 
 @Serializable
-data class StockLevel(var seeds: Long, var peppers: Long)
-
-@Serializable
-data class GameStateData(
-    var balance: Long = 10000000L,
-    var area: Area = Area.SpareRoom,
-    var light: Light = Light.Ambient,
-    var medium: Medium = Medium.Soil,
-    var dateMillis: Long = Instant.now().toEpochMilli(),
-    val plants: List<Plant?> = Collections.nCopies(area.total, null as Plant?),
-    val inventory: List<Pair<PlantType, StockLevel>> = listOf(
-        Pair(PlantType.BellPepper, StockLevel(seeds = 1, peppers = 5)),
-        Pair(PlantType.Evolcano, StockLevel(seeds = 10, peppers = 500))
-    ),
-)
+data class StockLevel(var peppers: Long)
 
 class GameState(private val gameStateData: GameStateData) {
+    private companion object {
+        val MILLIS_PER_TICK = Duration.ofMinutes(30).toMillis()
+        val MILLIS_PER_COST_TICK = Duration.ofDays(1).toMillis()
+    }
+
     private val _balance = MutableLiveData(gameStateData.balance)
     val balance: LiveData<Long> by ::_balance
 
@@ -41,8 +34,8 @@ class GameState(private val gameStateData: GameStateData) {
     private val _area = mutableStateOf(gameStateData.area)
     val area: State<Area> by ::_area
 
-    private val _plants = gameStateData.plants.toMutableStateList()
-    val plants: SnapshotStateList<Plant?> by ::_plants
+    private val _plantPots = gameStateData.plantPots.toMutableStateList()
+    val plantPots: SnapshotStateList<PlantPot> by ::_plantPots
 
     private val _light = mutableStateOf(gameStateData.light)
     val light: State<Light> by ::_light
@@ -58,33 +51,30 @@ class GameState(private val gameStateData: GameStateData) {
     var buyer = Buyer.Friends
         private set
 
-    private fun calculateCosts() =
-        (gameStateData.light.joulesPerTick * Costs.ElectricityJoule.cost)
-        .plus(gameStateData.medium.litresPerTick * Costs.WaterLitre.cost)
-
-    fun harvest(plant: Plant) {
-        if (plant.isRipe(gameStateData.dateMillis)) {
-            _inventory.compute(plant.plantType) { _, stock ->
-                return@compute if (stock != null) {
-                    stock.peppers += plant.harvest()
-                    stock
-                } else {
-                    StockLevel(seeds = 0, peppers = plant.harvest())
+    fun harvest(plantPot: PlantPot) {
+        plantPot.plant?.let { plant ->
+            if (plant.isRipe(gameStateData.dateMillis)) {
+                _inventory.compute(plant.plantType) { _, stock ->
+                    StockLevel(
+                        peppers = plant.harvest().plus(stock?.peppers ?: 0)
+                    )
                 }
+
+                removePlant(plantPot = plantPot)
             }
-            _plants[_plants.indexOf(plant)] = null
         }
     }
 
-    fun compost(plant: Plant) {
-        _plants[_plants.indexOf(plant)] = null
-    }
+    fun compost(plantPot: PlantPot) = removePlant(plantPot = plantPot)
 
+    private fun removePlant(plantPot: PlantPot) {
+        _plantPots[_plantPots.indexOf(plantPot)] = PlantPot(plant = null)
+    }
 
     fun sellProduce(plantType: PlantType) {
         _inventory[plantType]?.let {
+            _inventory[plantType] = StockLevel(peppers = 0)
             gameStateData.balance += buyer.total(plantType = plantType, peppers = it.peppers)
-            it.peppers = 0
             _balance.postValue(gameStateData.balance)
         }
     }
@@ -105,7 +95,9 @@ class GameState(private val gameStateData: GameStateData) {
 
     fun buyAreaUpgrade(desiredArea: Area) {
         if (deductPurchaseCost(desiredArea)) {
-            _plants.addAll(Collections.nCopies(desiredArea.total - gameStateData.area.total, null))
+            _plantPots.addAll(
+                List(desiredArea.total - gameStateData.area.total) { PlantPot(plant = null) }
+            )
             gameStateData.area = desiredArea
             _area.value = desiredArea
         }
@@ -122,34 +114,56 @@ class GameState(private val gameStateData: GameStateData) {
     }
 
     fun plantSeed(seed: Seed) {
-        val index = _plants.indexOfFirst { it == null }
+        val index = _plantPots.indexOfFirst { it.plant == null }
         if (index >= 0 && deductPurchaseCost(seed.plantType)) {
-            _plants[index] = Plant(
-                plantType = seed.plantType,
-                epochMillis = gameStateData.dateMillis,
+            _plantPots[index] = PlantPot(
+                plant = Plant(
+                    plantType = seed.plantType,
+                    epochMillis = gameStateData.dateMillis,
+                    lightStrength = gameStateData.light.strength,
+                    mediumEffectiveness = gameStateData.medium.effectiveness,
+                )
             )
         }
     }
 
-    fun onTick(): Boolean {
-        calculateCosts().also {
-            if (it > gameStateData.balance) {
-                return true
-            }
+    private fun calculateCosts(): Long {
+        val light = gameStateData.light
+        val medium = gameStateData.medium
 
-            gameStateData.balance -= it
+        return (light.joulesPerCostTick.toLong() * Costs.ElectricityJoule.cost)
+         .plus(medium.litresPerCostTick * Costs.WaterLitre.cost)
+         .times(
+             _plantPots
+                 .count { it.plant?.isGrowing(gameStateData.dateMillis) == true }
+         )
+    }
+
+    fun onTick(): Boolean {
+        gameStateData.dateMillis += MILLIS_PER_TICK
+        _dateMillis.postValue(gameStateData.dateMillis)
+
+        gameStateData.milliCounter += MILLIS_PER_TICK
+
+        if (gameStateData.milliCounter >= MILLIS_PER_COST_TICK) {
+            gameStateData.milliCounter -= MILLIS_PER_COST_TICK
+
+            calculateCosts().also {
+                if (it > gameStateData.balance) {
+                    return true
+                }
+
+                gameStateData.balance -= it
+            }
         }
 
         _balance.postValue(gameStateData.balance)
-
-        gameStateData.dateMillis += 2000 * 1000
-        _dateMillis.postValue(gameStateData.dateMillis)
 
         return false
     }
 
     fun snapshot() = gameStateData.copy(
-        plants = _plants.toList(),
-        inventory = _inventory.toList(),
+        plantPots = _plantPots.toList(),
+        inventory = _inventory.toList().map { it.copy(second = it.second.copy()) },
     )
 }

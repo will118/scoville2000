@@ -16,29 +16,29 @@ import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntSize
 import com.will118.scoville2000.engine.PhaseNames
-import com.will118.scoville2000.engine.Plant
+import com.will118.scoville2000.engine.PlantPot
 import kotlin.math.floor
 
 private fun getTappedPlant(
     offset: Offset,
     size: IntSize,
     area: Area,
-    plants: List<Plant?>
-): Plant? {
+    plantPots: List<PlantPot>
+): PlantPot? {
     val lines = Integer.max(1, area.dimension)
     val step = size.height.toFloat() / lines
     val index = floor(offset.x / step).toInt() + (floor(offset.y / step).toInt() * area.dimension)
-    return plants.getOrNull(index)
+    return plantPots.getOrNull(index)
 }
 
 @ExperimentalGraphicsApi
 @Composable
 fun PlantGrid(
     area: State<Area>,
-    plants: SnapshotStateList<Plant?>,
+    plantPots: SnapshotStateList<PlantPot>,
     dateMillis: State<Long?>,
-    harvest: (Plant) -> Unit,
-    compost: (Plant) -> Unit,
+    harvest: (PlantPot) -> Unit,
+    compost: (PlantPot) -> Unit,
 ) {
     // cf. Mondrian
     Canvas(modifier = Modifier
@@ -50,15 +50,17 @@ fun PlantGrid(
                     offset = offset,
                     size = this.size,
                     area = area.value,
-                    plants = plants,
-                )?.let {
-                    val phase = it.currentPhase(dateMillis.value!!)
+                    plantPots = plantPots,
+                )?.let { plantPot ->
+                    plantPot.plant?.let {
+                        val phase = it.currentPhase(dateMillis.value!!)
 
-                    if (phase?.isRipe == true) {
-                        harvest(it)
-                    }
-                    if (phase == null) {
-                        compost(it)
+                        if (phase?.isRipe == true) {
+                            harvest(plantPot)
+                        }
+                        if (phase == null) {
+                            compost(plantPot)
+                        }
                     }
                 }
             }
@@ -115,9 +117,9 @@ fun PlantGrid(
             )
         }
 
-        for (plant in plants.withIndex().filter { it.value != null }) {
+        for (plantPot in plantPots.withIndex().filter { it.value.plant != null }) {
             drawRect(
-                color = when (plant.value!!.currentPhase(dateMillis.value!!)) {
+                color = when (plantPot.value.plant!!.currentPhase(dateMillis.value!!)) {
                     PhaseNames.Sprout -> Color.hsv(92f, 0.5f, 0.98f)
                     PhaseNames.Seedling -> Color.hsv(93f, 0.29f, 0.88f)
                     PhaseNames.Vegetative -> Color.hsv(93f, 0.60f, 0.78f)
@@ -127,8 +129,8 @@ fun PlantGrid(
                     null -> Color.hsv(9f, 1.00f, 0.30f)
                 },
                 topLeft = Offset(
-                    x = (plant.index % area.value.dimension) * step,
-                    y = (plant.index / area.value.dimension) * step
+                    x = (plantPot.index % area.value.dimension) * step,
+                    y = (plantPot.index / area.value.dimension) * step
                 ),
                 size = Size(step, step),
             )

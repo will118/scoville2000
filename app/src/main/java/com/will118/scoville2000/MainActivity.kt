@@ -5,10 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
+import androidx.compose.ui.unit.dp
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
@@ -32,7 +37,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 class MainActivity : ComponentActivity() {
-    val Context.dataStore: DataStore<GameStateData> by dataStore(
+    private val Context.dataStore: DataStore<GameStateData> by dataStore(
         "game-state-data",
         serializer = GameStateDataSerializer
     )
@@ -42,23 +47,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val initialStateData = runBlocking {
-            applicationContext.dataStore.data.first()
-        }
-
         setContent {
             val navController = rememberNavController()
-
-            val gameState = GameState(initialStateData)
-            val gameStateExecutor = GameStateExecutor(
-                gameState = gameState
-            ) {
-                GlobalScope.launch {
-                    runOnUiThread {
-                        navController.navigate(Routes.GameOver)
-                    }
-                }
-            }
 
             Gt2000Theme {
                 Surface(color = MaterialTheme.colors.background) {
@@ -66,10 +56,55 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Routes.Game) {
                         composable(Routes.Game) {
-                            Game(gameState = gameState, gameStateExecutor = gameStateExecutor)
+                            val initialStateData = runBlocking {
+                                applicationContext.dataStore.data.first()
+                            }
+
+                            val gameState = GameState(initialStateData.copy())
+                            val gameStateExecutor = GameStateExecutor(
+                                gameState = gameState,
+                                onSaveTick = { updated ->
+                                    applicationContext.dataStore.updateData {
+                                        updated
+                                    }
+                                },
+                                onGameOver = {
+                                    GlobalScope.launch {
+                                        runOnUiThread {
+                                            navController.navigate(Routes.GameOver)
+                                        }
+                                    }
+                                },
+                            )
+
+                            Game(
+                                gameState = gameState,
+                                gameStateExecutor = gameStateExecutor
+                            )
                         }
                         composable(Routes.GameOver) {
-                            Text(text = "Game Over")
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Text(text = "Game Over")
+                                    Spacer(modifier = Modifier.height(20.dp))
+                                    Button(onClick = {
+                                        runBlocking {
+                                            applicationContext.dataStore.updateData {
+                                                GameStateData()
+                                            }
+                                        }
+                                        navController.navigate(Routes.Game)
+                                    }) {
+                                        Text(text = "Restart")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
