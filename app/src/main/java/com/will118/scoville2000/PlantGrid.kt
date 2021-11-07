@@ -6,7 +6,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -34,12 +34,14 @@ private fun getTappedPlant(
 @ExperimentalGraphicsApi
 @Composable
 fun PlantGrid(
-    area: State<Area>,
+    area: Area,
     plantPots: SnapshotStateList<PlantPot>,
-    dateMillis: State<Long?>,
+    dateMillis: Long,
     harvest: (PlantPot) -> Unit,
     compost: (PlantPot) -> Unit,
 ) {
+    val areaWrapper = rememberUpdatedState(newValue = area)
+    val dateWrapper = rememberUpdatedState(newValue = dateMillis)
     // cf. Mondrian
     Canvas(modifier = Modifier
         .fillMaxWidth()
@@ -49,11 +51,11 @@ fun PlantGrid(
                 getTappedPlant(
                     offset = offset,
                     size = this.size,
-                    area = area.value,
+                    area = areaWrapper.value,
                     plantPots = plantPots,
                 )?.let { plantPot ->
                     plantPot.plant?.let {
-                        val phase = it.currentPhase(dateMillis.value!!)
+                        val phase = it.currentPhase(dateWrapper.value)
 
                         if (phase?.isRipe == true) {
                             harvest(plantPot)
@@ -97,7 +99,7 @@ fun PlantGrid(
             strokeWidth = 5.5f
         )
 
-        val lines = Integer.max(1, area.value.dimension)
+        val lines = Integer.max(1, area.dimension)
         val step = canvasHeight / lines
 
         for (i in (1 until lines)) {
@@ -119,7 +121,7 @@ fun PlantGrid(
 
         for (plantPot in plantPots.withIndex().filter { it.value.plant != null }) {
             drawRect(
-                color = when (plantPot.value.plant!!.currentPhase(dateMillis.value!!)) {
+                color = when (plantPot.value.plant!!.currentPhase(dateMillis)) {
                     PhaseNames.Sprout -> Color.hsv(92f, 0.5f, 0.98f)
                     PhaseNames.Seedling -> Color.hsv(93f, 0.29f, 0.88f)
                     PhaseNames.Vegetative -> Color.hsv(93f, 0.60f, 0.78f)
@@ -129,8 +131,8 @@ fun PlantGrid(
                     null -> Color.hsv(9f, 1.00f, 0.30f)
                 },
                 topLeft = Offset(
-                    x = (plantPot.index % area.value.dimension) * step,
-                    y = (plantPot.index / area.value.dimension) * step
+                    x = (plantPot.index % area.dimension) * step,
+                    y = (plantPot.index / area.dimension) * step
                 ),
                 size = Size(step, step),
             )

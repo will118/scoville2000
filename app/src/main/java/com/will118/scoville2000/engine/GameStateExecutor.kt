@@ -22,7 +22,6 @@ data class UpgradeArea(val area: Area) : GameOperation
 class GameStateExecutor(
     private val gameState: GameState,
     private val onSaveTick: suspend (GameStateData) -> Unit,
-    private val onGameOver: () -> Unit,
 ) {
     companion object {
         const val TICK_PERIOD = 16L
@@ -31,23 +30,27 @@ class GameStateExecutor(
 
     private val channel = Channel<GameOperation>()
 
-    private val tickLoop: suspend CoroutineScope.() -> Unit = {
-        enqueue(Tick)
-        delay(timeMillis = TICK_PERIOD)
+    private suspend fun tickLoop() {
+        while (!channel.isClosedForSend) {
+            channel.send(Tick)
+            delay(timeMillis = TICK_PERIOD)
+        }
     }
 
-    private val saveLoop: suspend CoroutineScope.() -> Unit = {
-        enqueue(Save)
-        delay(timeMillis = SAVE_PERIOD)
+    private suspend fun saveLoop() {
+        while (!channel.isClosedForSend) {
+            channel.send(Save)
+            delay(timeMillis = SAVE_PERIOD)
+        }
     }
 
-    private val executorLoop: suspend CoroutineScope.() -> Unit = {
+    private suspend fun executorLoop(onGameOver: () -> Unit) {
         while (!channel.isClosedForReceive) {
             when (val operation = channel.receive()) {
                 is Save -> onSaveTick(gameState.snapshot())
                 is Tick -> {
                     if (gameState.onTick()) {
-                        gameOver()
+                        onGameOver()
                     }
                 }
                 is Harvest -> gameState.harvest(operation.plantPot)
@@ -61,23 +64,20 @@ class GameStateExecutor(
         }
     }
 
-    val loop: suspend CoroutineScope.() -> Unit = {
-        joinAll(
-            launch { executorLoop },
-            launch { saveLoop },
-            launch { tickLoop },
-        )
+    suspend fun loop(onGameOver: () -> Unit) {
+        coroutineScope {
+            launch {
+                executorLoop {
+                    channel.close()
+                    onGameOver()
+                }
+            }
+            launch { saveLoop() }
+            launch { tickLoop() }
+        }
     }
 
-    private fun gameOver() {
-//        saveTask.cancel()
-//        tickTask.cancel()
-//        timer.cancel()
-//        channel.close()
-        onGameOver()
-    }
-
-    fun enqueue(operation: GameOperation) {
+    fun enqueueSync(operation: GameOperation) {
         runBlocking {
             if (!channel.isClosedForSend) {
                 channel.send(operation)

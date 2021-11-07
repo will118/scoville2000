@@ -47,6 +47,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val gameStateData = runBlocking {
+            applicationContext.dataStore.data.first()
+        }
+
+        val gameState = GameState(gameStateData.copy())
+        val gameStateExecutor = GameStateExecutor(
+            gameState = gameState,
+            onSaveTick = { updated ->
+                applicationContext.dataStore.updateData {
+                    updated
+                }
+            },
+        )
+
         setContent {
             val navController = rememberNavController()
 
@@ -56,18 +70,9 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Routes.Game) {
                         composable(Routes.Game) {
-                            val initialStateData = runBlocking {
-                                applicationContext.dataStore.data.first()
-                            }
-
-                            val gameState = GameState(initialStateData.copy())
-                            val gameStateExecutor = GameStateExecutor(
+                            GameContainer(
                                 gameState = gameState,
-                                onSaveTick = { updated ->
-                                    applicationContext.dataStore.updateData {
-                                        updated
-                                    }
-                                },
+                                gameStateExecutor = gameStateExecutor,
                                 onGameOver = {
                                     GlobalScope.launch {
                                         runOnUiThread {
@@ -75,11 +80,6 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 },
-                            )
-
-                            Game(
-                                gameState = gameState,
-                                gameStateExecutor = gameStateExecutor
                             )
                         }
                         composable(Routes.GameOver) {

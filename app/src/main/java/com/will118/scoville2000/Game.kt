@@ -5,6 +5,7 @@ import Describe
 import Light
 import Medium
 import Purchasable
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -15,9 +16,6 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
@@ -45,14 +43,26 @@ import java.time.format.FormatStyle
 @ExperimentalCoroutinesApi
 @ExperimentalFoundationApi
 @Composable
-fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
-    LaunchedEffect("executorLoop", gameStateExecutor.loop)
-
-    val balance = gameState.balance.observeAsState()
-    val dateMillis = gameState.dateMillis.observeAsState()
-    val inventory = gameState.inventory
-
+fun Game(
+    area: Area,
+    balance: Long,
+    buyer: Buyer,
+    dateMillis: Long,
+    light: Light,
+    medium: Medium,
+    plantPots: SnapshotStateList<PlantPot>,
+    inventory: SnapshotStateMap<PlantType, StockLevel>,
+    harvest: (PlantPot) -> Unit,
+    compost: (PlantPot) -> Unit,
+    sell: (PlantType) -> Unit,
+    upgradeArea: (Area) -> Unit,
+    upgradeMedium: (Medium) -> Unit,
+    upgradeLight: (Light) -> Unit,
+    plantSeed: (Seed) -> Unit,
+) {
     val dividerPadding = Modifier.padding(vertical = 15.dp)
+
+    Log.i("Game", "$dateMillis")
 
     Column(modifier = Modifier
         .padding(10.dp)
@@ -62,34 +72,34 @@ fun Game(gameState: GameState, gameStateExecutor: GameStateExecutor) {
             enabled = true
         )) {
         PlantControl(
-            plantPots = gameState.plantPots,
-            area = gameState.area,
+            plantPots = plantPots,
+            area = area,
             dateMillis = dateMillis,
-            harvest = { gameStateExecutor.enqueue(Harvest(it)) },
-            compost = { gameStateExecutor.enqueue(Compost(it)) },
+            harvest = harvest,
+            compost = compost,
         )
         Divider(modifier = dividerPadding)
         InventoryControl(
             inventory = inventory,
-            sell = { gameStateExecutor.enqueue(SellProduce(it)) },
+            sell = sell,
         )
         Divider(modifier = dividerPadding)
         StatsControl(
-            balance = balance.value,
+            balance = balance,
             dateMillis = dateMillis,
-            light = gameState.light.value,
-            medium = gameState.medium.value,
-            buyer = gameState.buyer,
+            light = light,
+            medium = medium,
+            buyer = buyer,
         )
         Divider(modifier = dividerPadding)
         ShopControl(
-            currentLight = gameState.light.value,
-            currentArea = gameState.area.value,
-            currentMedium = gameState.medium.value,
-            plantSeed = { gameStateExecutor.enqueue(PlantSeed(it)) },
-            upgradeLight = { gameStateExecutor.enqueue(UpgradeLight(it)) },
-            upgradeMedium = { gameStateExecutor.enqueue(UpgradeMedium(it)) },
-            upgradeArea = { gameStateExecutor.enqueue(UpgradeArea(it)) },
+            currentLight = light,
+            currentArea = area,
+            currentMedium = medium,
+            plantSeed = plantSeed,
+            upgradeLight = upgradeLight,
+            upgradeMedium = upgradeMedium,
+            upgradeArea = upgradeArea,
         )
     }
 }
@@ -196,14 +206,14 @@ fun StatText(name: String, value: String) {
 
 @Composable
 fun StatsControl(
-    balance: Long?,
-    dateMillis: State<Long?>,
+    balance: Long,
+    dateMillis: Long,
     light: Light,
     medium: Medium,
     buyer: Buyer,
 ) {
     val dateTime = OffsetDateTime.ofInstant(
-        Instant.ofEpochMilli(dateMillis.value!!),
+        Instant.ofEpochMilli(dateMillis),
         ZoneId.systemDefault()
     )
 
@@ -347,8 +357,8 @@ fun <T> Table(
 @Composable
 fun PlantControl(
     plantPots: SnapshotStateList<PlantPot>,
-    area: State<Area>,
-    dateMillis: State<Long?>,
+    area: Area,
+    dateMillis: Long,
     harvest: (PlantPot) -> Unit,
     compost: (PlantPot) -> Unit,
 ) {
@@ -359,7 +369,7 @@ fun PlantControl(
         )
         Spacer(modifier = Modifier.height(5.dp))
         Text(
-            text = "${plantPots.count { it.plant != null }}/${area.value.total} (${area.value.displayName})",
+            text = "${plantPots.count { it.plant != null }}/${area.total} (${area.displayName})",
             style = Typography.subtitle2
         )
         Spacer(modifier = Modifier.height(10.dp))
