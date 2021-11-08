@@ -22,7 +22,7 @@ enum class PlantType(
     ),
     Poblano(
         displayName = "Poblano",
-        scovilles = 1_250,
+        scovilles = 2_000,
         phases = Phases.DEFAULT,
         cost = Currency(20),
     ),

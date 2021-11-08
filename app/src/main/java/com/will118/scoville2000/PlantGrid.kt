@@ -122,13 +122,13 @@ fun PlantGrid(
         for (plantPot in plantPots.withIndex().filter { it.value.plant != null }) {
             drawRect(
                 color = when (plantPot.value.plant!!.currentPhase(dateMillis)) {
-                    PhaseNames.Sprout -> Color.hsv(92f, 0.5f, 0.98f)
+                    PhaseNames.Sprout -> Color.hsv(92f, 0.11f, 0.88f)
                     PhaseNames.Seedling -> Color.hsv(93f, 0.29f, 0.88f)
                     PhaseNames.Vegetative -> Color.hsv(93f, 0.60f, 0.78f)
                     PhaseNames.Budding -> Color.hsv(93f, 0.68f, 0.68f)
                     PhaseNames.Flowering -> Color.hsv(93f, 0.68f, 0.53f)
-                    PhaseNames.Ripening -> Color.hsv(9f, 1.00f, 0.70f)
-                    null -> Color.hsv(9f, 1.00f, 0.30f)
+                    PhaseNames.Ripening -> Color.hsv(35f, 1.00f, 0.70f)
+                    null -> Color.hsv(0f, 0.71f, 0.30f)
                 },
                 topLeft = Offset(
                     x = (plantPot.index % area.dimension) * step,

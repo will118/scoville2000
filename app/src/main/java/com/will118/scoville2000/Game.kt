@@ -318,11 +318,11 @@ fun <T> Table(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(25.dp),
-                        contentColor = Color.Transparent,
+//                        contentColor = Color.Transparent,
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = it,
@@ -342,7 +342,7 @@ fun <T> Table(
                     for (item in items) {
                         Surface(
                             border = BorderStroke(1.dp, Color.LightGray),
-                            contentColor = Color.Transparent,
+//                            contentColor = Color.Transparent,
                             modifier = Modifier
                                 .height(35.dp)
                                 .fillMaxWidth()
@@ -353,7 +353,7 @@ fun <T> Table(
                 } else {
                     Surface(
                         border = BorderStroke(1.dp, Color.LightGray),
-                        contentColor = Color.Transparent,
+//                        contentColor = Color.Transparent,
                         modifier = Modifier
                             .height(35.dp)
                             .fillMaxWidth()
