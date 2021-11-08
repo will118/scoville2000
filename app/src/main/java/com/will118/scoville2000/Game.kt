@@ -1,11 +1,11 @@
 package com.will118.scoville2000
 
-import Area
-import Currency
-import Describe
-import Light
-import Medium
-import Purchasable
+import com.will118.scoville2000.engine.Area
+import com.will118.scoville2000.engine.Currency
+import com.will118.scoville2000.engine.Describe
+import com.will118.scoville2000.engine.Light
+import com.will118.scoville2000.engine.Medium
+import com.will118.scoville2000.engine.Purchasable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -160,7 +160,7 @@ fun ShopControl(
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Growth Medium", style = Typography.subtitle2)
+        Text(text = "Growth medium", style = Typography.subtitle2)
         Spacer(modifier = Modifier.height(5.dp))
         shopTable(
             items = Medium.values()

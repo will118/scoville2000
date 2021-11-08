@@ -1,6 +1,6 @@
 package com.will118.scoville2000
 
-import Currency
+import com.will118.scoville2000.engine.Currency
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

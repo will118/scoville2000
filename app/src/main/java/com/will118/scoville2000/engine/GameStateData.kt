@@ -1,9 +1,5 @@
 package com.will118.scoville2000.engine
 
-import Area
-import Currency
-import Light
-import Medium
 import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.util.*
@@ -21,7 +17,7 @@ data class GameId(val msb: Long, val lsb: Long) {
 @Serializable
 data class GameStateData(
     val id: GameId = GameId.fromUUID(UUID.randomUUID()),
-    var balance: Currency = Currency(150),
+    var balance: Currency = Currency(80),
     var area: Area = Area.WindowSill,
     var light: Light = Light.Ambient,
     var medium: Medium = Medium.Soil,
@@ -30,6 +26,5 @@ data class GameStateData(
     val plantPots: List<PlantPot> = List(area.total) { PlantPot(plant = null) },
     val inventory: List<Pair<PlantType, StockLevel>> = listOf(
         Pair(PlantType.BellPepper, StockLevel(peppers = 5)),
-        Pair(PlantType.Poblano, StockLevel(peppers = 5)),
     ),
 )
