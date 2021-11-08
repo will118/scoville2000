@@ -1,7 +1,5 @@
 package com.will118.scoville2000.engine
 
-import Currency
-import Describe
 import java.lang.Long.max
 
 enum class Buyer(

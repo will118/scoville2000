@@ -1,10 +1,9 @@
 package com.will118.scoville2000.engine
 
-import Area
-import Light
-import Medium
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import java.util.*
+import kotlin.concurrent.scheduleAtFixedRate
 
 sealed interface GameOperation
 
@@ -24,8 +23,8 @@ class GameStateExecutor(
     private val onSaveTick: suspend (GameStateData) -> Unit,
 ) {
     companion object {
-        const val TICK_PERIOD = 16L
-        const val SAVE_PERIOD = 1_000L
+        const val TICK_PERIOD_MS = 16L
+        const val SAVE_PERIOD_MS = 1_000L
     }
 
     private val channel = Channel<GameOperation>(Channel.UNLIMITED)
@@ -50,29 +49,26 @@ class GameStateExecutor(
         return true
     }
 
-    suspend fun loop(onGameOver: () -> Unit): Job {
-        return coroutineScope {
-            launch {
-                while (isActive && !channel.isClosedForReceive) {
-                    if (!executorLoop()) {
-                        channel.close()
-                        onGameOver()
-                    }
-                }
+    private val timer = Timer().also {
+        it.scheduleAtFixedRate(delay = 0, period = TICK_PERIOD_MS) {
+            runBlocking {
+                channel.send(Tick)
             }
+        }
 
-            launch {
-                while (isActive && !channel.isClosedForSend) {
-                    channel.send(Tick)
-                    delay(timeMillis = TICK_PERIOD)
-                }
+        it.scheduleAtFixedRate(delay = SAVE_PERIOD_MS, period = SAVE_PERIOD_MS) {
+            runBlocking {
+                channel.send(Tick)
             }
+        }
+    }
 
-            launch {
-                while (isActive && !channel.isClosedForSend) {
-                    channel.send(Save)
-                    delay(timeMillis = SAVE_PERIOD)
-                }
+    suspend fun loop(onGameOver: () -> Unit) = coroutineScope {
+        while (isActive && !channel.isClosedForReceive) {
+            if (!executorLoop()) {
+                timer.cancel()
+                channel.close()
+                onGameOver()
             }
         }
     }

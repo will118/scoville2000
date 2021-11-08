@@ -1,8 +1,5 @@
 package com.will118.scoville2000.engine
 
-import Currency
-import Describe
-import Purchasable
 import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.Instant

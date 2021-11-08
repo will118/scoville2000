@@ -1,6 +1,6 @@
 package com.will118.scoville2000
 
-import Area
+import com.will118.scoville2000.engine.Area
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio

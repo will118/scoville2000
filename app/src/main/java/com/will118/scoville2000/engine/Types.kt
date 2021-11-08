@@ -1,3 +1,5 @@
+package com.will118.scoville2000.engine
+
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,28 +10,28 @@ enum class Area(
 ): Describe, Purchasable {
     WindowSill(
         dimension = 1,
-        displayName = "Windowsill",
+        displayName = "Window sill",
         cost = null,
     ),
     Bedroom(
         dimension = 2,
         displayName = "Bedroom",
-        cost = Currency(20_000),
+        cost = Currency(50_000),
     ),
     SpareRoom(
         dimension = 4,
         displayName = "Spare Room",
-        cost = Currency(60_000)
+        cost = Currency(600_000)
     ),
     Apartment(
         dimension = 8,
         displayName = "Apartment",
-        cost = Currency(300_000)
+        cost = Currency(1_300_000)
     ),
     Warehouse(
         dimension = 16,
         displayName = "Warehouse",
-        cost = Currency(2_500_000),
+        cost = Currency(90_000_000),
     );
 
     val total = dimension * dimension
@@ -60,19 +62,19 @@ enum class Light(
         strength = 2,
         joulesPerCostTick = 1,
         displayName = "CFL",
-        cost = Currency(1_000L),
+        cost = Currency(10_000L),
     ),
     Halogen(
         strength = 5,
         joulesPerCostTick = 10,
         displayName = "Halogen",
-        cost = Currency(100_000L),
+        cost = Currency(350_000L),
     ),
     LED(
         strength = 5,
         joulesPerCostTick = 1,
         displayName = "LED",
-        cost = Currency(1_200_000L),
+        cost = Currency(4_200_000L),
     )
 }
 
@@ -99,7 +101,7 @@ enum class Medium(
         effectiveness = 5,
         litresPerCostTick = 1,
         displayName = "Hydroponics",
-        cost = Currency(100_000),
+        cost = Currency(200_000),
     )
 }
 
@@ -111,6 +113,6 @@ enum class Costs(val cost: Int) {
 @Serializable
 data class Currency(val total: Long) {
     override fun toString(): String {
-        return "₡${total}"
+        return "₡${"%,d".format(total)}"
     }
 }
