@@ -21,6 +21,7 @@ data class GameStateData(
     var area: Area = Area.WindowSill,
     var light: Light = Light.Ambient,
     var medium: Medium = Medium.Soil,
+    var technologyLevel: TechnologyLevel = TechnologyLevel.None,
     var milliCounter: Long = 0, // Used for calculating costs
     var dateMillis: Long = Instant.now().toEpochMilli(),
     val plantPots: List<PlantPot> = List(area.total) { PlantPot(plant = null) },

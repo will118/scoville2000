@@ -1,6 +1,5 @@
 package com.will118.scoville2000
 
-import com.will118.scoville2000.engine.Currency
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +33,7 @@ fun GameContainer(
         medium = gameState.medium.value,
         plantPots = gameState.plantPots,
         inventory = gameState.inventory,
+        technologyLevel = gameState.technologyLevel.value,
         harvest = { gameStateExecutor.enqueueSync(Harvest(it)) },
         compost = { gameStateExecutor.enqueueSync(Compost(it)) },
         sell = { gameStateExecutor.enqueueSync(SellProduce(it)) },

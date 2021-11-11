@@ -38,6 +38,9 @@ class GameState(private val gameStateData: GameStateData) {
     private val _medium = mutableStateOf(gameStateData.medium)
     val medium: State<Medium> by ::_medium
 
+    private val _technologyLevel = mutableStateOf(gameStateData.technologyLevel)
+    val technologyLevel: State<TechnologyLevel> by ::_technologyLevel
+
     // Using LiveData to get around an issue at startup where we try and read a value
     // before it is snapshot.
     private val _dateMillis = MutableLiveData(gameStateData.dateMillis)

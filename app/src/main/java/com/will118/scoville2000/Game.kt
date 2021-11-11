@@ -1,11 +1,5 @@
 package com.will118.scoville2000
 
-import com.will118.scoville2000.engine.Area
-import com.will118.scoville2000.engine.Currency
-import com.will118.scoville2000.engine.Describe
-import com.will118.scoville2000.engine.Light
-import com.will118.scoville2000.engine.Medium
-import com.will118.scoville2000.engine.Purchasable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -31,6 +25,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.will118.scoville2000.engine.*
+import com.will118.scoville2000.engine.Area
+import com.will118.scoville2000.engine.Light
+import com.will118.scoville2000.engine.Medium
 import com.will118.scoville2000.ui.theme.Typography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.time.Instant
@@ -50,6 +47,7 @@ fun Game(
     dateMillis: Long,
     light: Light,
     medium: Medium,
+    technologyLevel: TechnologyLevel,
     plantPots: SnapshotStateList<PlantPot>,
     inventory: SnapshotStateMap<PlantType, StockLevel>,
     harvest: (PlantPot) -> Unit,
@@ -99,9 +97,51 @@ fun Game(
             upgradeMedium = upgradeMedium,
             upgradeArea = upgradeArea,
         )
+        if (technologyLevel != TechnologyLevel.None) {
+            Divider(modifier = dividerPadding)
+            TechnologyControl(
+                technologyLevel = technologyLevel
+            )
+        }
     }
 }
 
+@Composable
+fun <T> shopTable(items: Sequence<T>, button: @Composable (T) -> Unit)
+        where T : Describe, T : Purchasable {
+    Table(
+        headers = listOf(null, null, null),
+        items = items,
+        renderItem = { column, item ->
+            when (column.index) {
+                0 -> TableCellText(text = item.displayName)
+                1 -> TableCellText(text = item.cost!!.toString())
+                2 -> button(item)
+            }
+        }
+    )
+}
+
+@Composable
+fun TechnologyControl(
+    technologyLevel: TechnologyLevel,
+) {
+    Column {
+        Text(text = "Technology", style = Typography.h5)
+        Spacer(modifier = Modifier.height(10.dp))
+        shopTable(
+            items = technologyLevel
+                .visibleTechnologies()
+                .asSequence()
+        ) {
+            TextButton(onClick = {  }) {
+                Text(
+                    text = "Buy",
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun ShopControl(
@@ -113,22 +153,6 @@ fun ShopControl(
     upgradeMedium: (Medium) -> Unit,
     upgradeArea: (Area) -> Unit,
 ) {
-    @Composable
-    fun <T> shopTable(items: Sequence<T>, button: @Composable (T) -> Unit)
-        where T : Describe, T : Purchasable {
-        Table(
-            headers = listOf(null, null, null),
-            items = items,
-            renderItem = { column, item ->
-                when (column.index) {
-                    0 -> TableCellText(text = item.displayName)
-                    1 -> TableCellText(text = item.cost!!.toString())
-                    2 -> button(item)
-                }
-            }
-        )
-    }
-
     Column {
         Text(text = "Shop", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
@@ -318,7 +342,6 @@ fun <T> Table(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(25.dp),
-//                        contentColor = Color.Transparent,
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -342,7 +365,6 @@ fun <T> Table(
                     for (item in items) {
                         Surface(
                             border = BorderStroke(1.dp, Color.LightGray),
-//                            contentColor = Color.Transparent,
                             modifier = Modifier
                                 .height(35.dp)
                                 .fillMaxWidth()
@@ -353,7 +375,6 @@ fun <T> Table(
                 } else {
                     Surface(
                         border = BorderStroke(1.dp, Color.LightGray),
-//                        contentColor = Color.Transparent,
                         modifier = Modifier
                             .height(35.dp)
                             .fillMaxWidth()
