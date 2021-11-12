@@ -38,6 +38,9 @@ class GameState(private val gameStateData: GameStateData) {
     private val _medium = mutableStateOf(gameStateData.medium)
     val medium: State<Medium> by ::_medium
 
+    private val _tool = mutableStateOf(gameStateData.tool)
+    val tool: State<Tool> by ::_tool
+
     private val _technologyLevel = mutableStateOf(gameStateData.technologyLevel)
     val technologyLevel: State<TechnologyLevel> by ::_technologyLevel
 
@@ -52,21 +55,103 @@ class GameState(private val gameStateData: GameStateData) {
     val id: GameId
         get() = gameStateData.id
 
-    fun harvest(plantPot: PlantPot) {
-        plantPot.plant?.let { plant ->
-            if (plant.isRipe(gameStateData.dateMillis)) {
-                _inventory.compute(plant.plantType) { _, stock ->
-                    StockLevel(
-                        peppers = plant.harvest().plus(stock?.peppers ?: 0)
-                    )
-                }
+    fun harvestOrCompost(plantPot: PlantPot) {
+        val millis = gameStateData.dateMillis
 
-                removePlant(plantPot = plantPot)
+        plantPot.plant?.let {
+            val isHarvesting = it.isRipe(millis)
+
+            val allPots = getSurroundingMaturedPots(
+                pot = plantPot,
+                millis = millis,
+                initialRipe = isHarvesting,
+            )
+
+            val pots = when (gameStateData.tool) {
+                Tool.Scythe -> allPots
+                Tool.None -> allPots.take(1)
+            }
+
+            for (pot in pots) {
+                if (isHarvesting) {
+                    _inventory.compute(pot.plant!!.plantType) { _, stock ->
+                        StockLevel(
+                            peppers = pot.plant.harvest().plus(stock?.peppers ?: 0)
+                        )
+                    }
+                }
+                removePlant(plantPot = pot)
             }
         }
     }
 
-    fun compost(plantPot: PlantPot) = removePlant(plantPot = plantPot)
+    // Either surrounding ripe, or dead.
+    private fun getSurroundingMaturedPots(
+        pot: PlantPot,
+        millis: Long,
+        initialRipe: Boolean,
+    ): Sequence<PlantPot> = sequence {
+        val dimension = gameStateData.area.dimension
+        pot.plant?.let {
+            val isRipe = it.isRipe(millis) && initialRipe
+            val isDead = it.isDead(millis) && !initialRipe
+
+            if (isRipe || isDead) {
+                // get index first, as we replace with a new immutable object
+                val centerIndex = _plantPots.indexOf(pot)
+
+                yield(pot)
+
+                val col = centerIndex % dimension
+
+                if (col > 0) {
+                    // not on left edge
+                    yieldAll(
+                        getSurroundingMaturedPots(
+                            pot = _plantPots[centerIndex - 1],
+                            initialRipe = initialRipe,
+                            millis = millis
+                        )
+                    )
+                }
+
+                if (col < dimension - 1) {
+                    // not on right edge
+                    yieldAll(
+                        getSurroundingMaturedPots(
+                            pot = _plantPots[centerIndex + 1],
+                            initialRipe = initialRipe,
+                            millis = millis
+                        )
+                    )
+                }
+
+                val row = centerIndex / dimension
+
+                if (row > 0) {
+                    // not on top edge
+                    yieldAll(
+                        getSurroundingMaturedPots(
+                            pot = _plantPots[centerIndex - dimension],
+                            initialRipe = initialRipe,
+                            millis = millis
+                        )
+                    )
+                }
+
+                if (row < dimension - 1) {
+                    // not on bottom edge
+                    yieldAll(
+                        getSurroundingMaturedPots(
+                            pot = _plantPots[centerIndex + dimension],
+                            initialRipe = initialRipe,
+                            millis = millis
+                        )
+                    )
+                }
+            }
+        }
+    }
 
     private fun removePlant(plantPot: PlantPot) {
         _plantPots[_plantPots.indexOf(plantPot)] = PlantPot(plant = null)
@@ -94,6 +179,13 @@ class GameState(private val gameStateData: GameStateData) {
         if (deductPurchaseCost(desiredMedium)) {
             gameStateData.medium = desiredMedium
             _medium.value = desiredMedium
+        }
+    }
+
+    fun buyToolUpgrade(desiredTool: Tool) {
+        if (deductPurchaseCost(desiredTool)) {
+            gameStateData.tool = desiredTool
+            _tool.value = desiredTool
         }
     }
 

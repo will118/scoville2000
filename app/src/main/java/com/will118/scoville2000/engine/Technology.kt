@@ -18,14 +18,14 @@ enum class Technology(
     val visibilityLevel: TechnologyLevel,
     override val cost: Currency?,
     override val displayName: String) : Describe, Purchasable {
-    HarvestBot(
+    AutoHarvester(
         cost = Currency(total = 25_000_000),
-        displayName = "HarvestBot",
+        displayName = "AutoHarvester",
         visibilityLevel = TechnologyLevel.Basic,
     ),
-    SeedBot(
+    AutoPlanter(
         cost = Currency(total = 75_000_000),
-        displayName = "SeedBot",
+        displayName = "AutoPlanter",
         visibilityLevel = TechnologyLevel.Basic,
     ),
     ScovilleDistillery(

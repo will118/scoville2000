@@ -77,6 +77,8 @@ data class Plant(
     fun isRipe(currentEpochMillis: Long) =
         currentPhase(currentEpochMillis)?.isRipe ?: false
 
+    fun isDead(currentEpochMillis: Long) = currentPhase(currentEpochMillis) == null
+
     fun harvest() = 15L * lightStrength * mediumEffectiveness
 }
 

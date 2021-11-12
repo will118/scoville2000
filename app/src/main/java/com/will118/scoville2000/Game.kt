@@ -25,9 +25,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.will118.scoville2000.engine.*
-import com.will118.scoville2000.engine.Area
-import com.will118.scoville2000.engine.Light
-import com.will118.scoville2000.engine.Medium
 import com.will118.scoville2000.ui.theme.Typography
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.time.Instant
@@ -47,15 +44,16 @@ fun Game(
     dateMillis: Long,
     light: Light,
     medium: Medium,
+    tool: Tool,
     technologyLevel: TechnologyLevel,
     plantPots: SnapshotStateList<PlantPot>,
     inventory: SnapshotStateMap<PlantType, StockLevel>,
-    harvest: (PlantPot) -> Unit,
-    compost: (PlantPot) -> Unit,
+    onPlantPotTap: (PlantPot) -> Unit,
     sell: (PlantType) -> Unit,
     upgradeArea: (Area) -> Unit,
     upgradeMedium: (Medium) -> Unit,
     upgradeLight: (Light) -> Unit,
+    upgradeTool: (Tool) -> Unit,
     plantSeed: (Seed) -> Unit,
 ) {
     val dividerPadding = Modifier.padding(vertical = 15.dp)
@@ -71,8 +69,7 @@ fun Game(
             plantPots = plantPots,
             area = area,
             dateMillis = dateMillis,
-            harvest = harvest,
-            compost = compost,
+            onPlantPotTap = onPlantPotTap,
         )
         Divider(modifier = dividerPadding)
         InventoryControl(
@@ -92,10 +89,12 @@ fun Game(
             currentLight = light,
             currentArea = area,
             currentMedium = medium,
+            currentTool = tool,
             plantSeed = plantSeed,
             upgradeLight = upgradeLight,
             upgradeMedium = upgradeMedium,
             upgradeArea = upgradeArea,
+            upgradeTool = upgradeTool,
         )
         if (technologyLevel != TechnologyLevel.None) {
             Divider(modifier = dividerPadding)
@@ -148,70 +147,70 @@ fun ShopControl(
     currentLight: Light,
     currentArea: Area,
     currentMedium: Medium,
+    currentTool: Tool,
     plantSeed: (Seed) -> Unit,
     upgradeLight: (Light) -> Unit,
     upgradeMedium: (Medium) -> Unit,
     upgradeArea: (Area) -> Unit,
+    upgradeTool: (Tool) -> Unit,
 ) {
+    @Composable
+    fun <T> product(
+        header: String,
+        products: List<T>,
+        buttonText: String,
+        onClick: (T) -> Unit,
+    ) where T : Describe, T : Purchasable {
+        if (products.isNotEmpty()) {
+            Text(text = header, style = Typography.subtitle2)
+            Spacer(modifier = Modifier.height(5.dp))
+            shopTable(
+                items = products.asSequence()
+            ) {
+                TextButton(onClick = { onClick(it) }) {
+                    Text(
+                        text = buttonText,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+    }
+
     Column {
         Text(text = "Shop", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Seeds", style = Typography.subtitle2)
-        Spacer(modifier = Modifier.height(5.dp))
-        shopTable(
-            items = PlantType.values()
-                .filter { it.cost != null }
-                .asSequence()
-        ) {
-            TextButton(onClick = { plantSeed(it.toSeed()) }) {
-                Text(
-                    text = "Plant",
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Lights", style = Typography.subtitle2)
-        Spacer(modifier = Modifier.height(5.dp))
-        shopTable(
-            items = Light.values()
-                .dropWhile { it.ordinal <= currentLight.ordinal }
-                .asSequence()
-        ) {
-            TextButton(onClick = { upgradeLight(it) }) {
-                Text(
-                    text = "Upgrade",
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Growth medium", style = Typography.subtitle2)
-        Spacer(modifier = Modifier.height(5.dp))
-        shopTable(
-            items = Medium.values()
-                .dropWhile { it.ordinal <= currentMedium.ordinal }
-                .asSequence()
-        ) {
-            TextButton(onClick = { upgradeMedium(it) }) {
-                Text(
-                    text = "Upgrade",
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Area", style = Typography.subtitle2)
-        Spacer(modifier = Modifier.height(5.dp))
-        shopTable(
-            items = Area.values()
-                .dropWhile { it.ordinal <= currentArea.ordinal }
-                .asSequence()
-        ) {
-            TextButton(onClick = { upgradeArea(it) }) {
-                Text(
-                    text = "Upgrade",
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
+
+        product(
+            header = "Seeds",
+            products = PlantType.values().filter { it.cost != null },
+            buttonText = "Plant",
+            onClick = { plantSeed(it.toSeed()) },
+        )
+        product(
+            header = "Lights",
+            products = currentLight.upgrades,
+            buttonText = "Upgrade",
+            onClick = upgradeLight,
+        )
+        product(
+            header = "Growth medium",
+            products = currentMedium.upgrades,
+            buttonText = "Upgrade",
+            onClick = upgradeMedium,
+        )
+        product(
+            header = "Area",
+            products = currentArea.upgrades,
+            buttonText = "Upgrade",
+            onClick = upgradeArea,
+        )
+        product(
+            header = "Tools",
+            products = Tool.values().dropWhile { it.ordinal <= currentTool.ordinal },
+            buttonText = "Upgrade",
+            onClick = upgradeTool,
+        )
     }
 }
 
@@ -393,8 +392,7 @@ fun PlantControl(
     plantPots: SnapshotStateList<PlantPot>,
     area: Area,
     dateMillis: Long,
-    harvest: (PlantPot) -> Unit,
-    compost: (PlantPot) -> Unit,
+    onPlantPotTap: (PlantPot) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -411,8 +409,7 @@ fun PlantControl(
             area = area,
             plantPots = plantPots,
             dateMillis = dateMillis,
-            harvest = harvest,
-            compost = compost
+            onPlantPotTap = onPlantPotTap,
         )
     }
 }

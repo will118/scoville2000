@@ -1,6 +1,5 @@
 package com.will118.scoville2000
 
-import com.will118.scoville2000.engine.Area
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntSize
+import com.will118.scoville2000.engine.Area
 import com.will118.scoville2000.engine.PhaseNames
 import com.will118.scoville2000.engine.PlantPot
 import kotlin.math.floor
@@ -37,11 +37,9 @@ fun PlantGrid(
     area: Area,
     plantPots: SnapshotStateList<PlantPot>,
     dateMillis: Long,
-    harvest: (PlantPot) -> Unit,
-    compost: (PlantPot) -> Unit,
+    onPlantPotTap: (PlantPot) -> Unit,
 ) {
     val areaWrapper = rememberUpdatedState(newValue = area)
-    val dateWrapper = rememberUpdatedState(newValue = dateMillis)
     // cf. Mondrian
     Canvas(modifier = Modifier
         .fillMaxWidth()
@@ -53,17 +51,8 @@ fun PlantGrid(
                     size = this.size,
                     area = areaWrapper.value,
                     plantPots = plantPots,
-                )?.let { plantPot ->
-                    plantPot.plant?.let {
-                        val phase = it.currentPhase(dateWrapper.value)
-
-                        if (phase?.isRipe == true) {
-                            harvest(plantPot)
-                        }
-                        if (phase == null) {
-                            compost(plantPot)
-                        }
-                    }
+                )?.let {
+                    onPlantPotTap(it)
                 }
             }
         }

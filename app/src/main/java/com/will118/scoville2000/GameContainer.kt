@@ -33,13 +33,14 @@ fun GameContainer(
         medium = gameState.medium.value,
         plantPots = gameState.plantPots,
         inventory = gameState.inventory,
+        tool = gameState.tool.value,
         technologyLevel = gameState.technologyLevel.value,
-        harvest = { gameStateExecutor.enqueueSync(Harvest(it)) },
-        compost = { gameStateExecutor.enqueueSync(Compost(it)) },
+        onPlantPotTap = { gameStateExecutor.enqueueSync(HarvestOrCompost(it)) },
         sell = { gameStateExecutor.enqueueSync(SellProduce(it)) },
         plantSeed = { gameStateExecutor.enqueueSync(PlantSeed(it)) },
         upgradeLight = { gameStateExecutor.enqueueSync(UpgradeLight(it)) },
         upgradeMedium = { gameStateExecutor.enqueueSync(UpgradeMedium(it)) },
         upgradeArea = { gameStateExecutor.enqueueSync(UpgradeArea(it)) },
+        upgradeTool = { gameStateExecutor.enqueueSync(UpgradeTool(it)) },
     )
 }

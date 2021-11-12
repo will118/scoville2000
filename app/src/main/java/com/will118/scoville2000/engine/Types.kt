@@ -2,12 +2,32 @@ package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
 
+interface Upgradable<T> {
+    val upgrades: List<T>
+}
+
+@Serializable
+enum class Tool(
+    override val displayName: String,
+    override val cost: Currency?,
+): Describe, Purchasable {
+    None(
+        displayName = "None",
+        cost = null,
+    ),
+    Scythe(
+        displayName = "Scythe",
+        cost = Currency(total = 1_000_000),
+    );
+}
+
+
 @Serializable
 enum class Area(
     val dimension: Int,
     override val displayName: String,
     override val cost: Currency?,
-): Describe, Purchasable {
+): Describe, Purchasable, Upgradable<Area> {
     WindowSill(
         dimension = 1,
         displayName = "Window sill",
@@ -34,6 +54,11 @@ enum class Area(
         cost = Currency(90_000_000),
     );
 
+    override val upgrades: List<Area>
+        get() = values()
+            .dropWhile { it.ordinal <= this.ordinal }
+            .take(1)
+
     val total = dimension * dimension
 }
 
@@ -51,7 +76,7 @@ enum class Light(
     val joulesPerCostTick: Int,
     override val displayName: String,
     override val cost: Currency?,
-):  Describe, Purchasable {
+):  Describe, Purchasable, Upgradable<Light> {
     Ambient(
         strength = 1,
         joulesPerCostTick = 0,
@@ -75,7 +100,12 @@ enum class Light(
         joulesPerCostTick = 1,
         displayName = "LED",
         cost = Currency(4_200_000L),
-    )
+    );
+
+    override val upgrades: List<Light>
+        get() = values()
+            .dropWhile { it.ordinal <= this.ordinal }
+            .take(1)
 }
 
 @Serializable
@@ -84,7 +114,7 @@ enum class Medium(
     val litresPerCostTick: Int,
     override val displayName: String,
     override val cost: Currency?,
-): Describe, Purchasable {
+): Describe, Purchasable, Upgradable<Medium> {
     Soil(
         effectiveness = 2,
         litresPerCostTick = 1,
@@ -102,7 +132,12 @@ enum class Medium(
         litresPerCostTick = 1,
         displayName = "Hydroponics",
         cost = Currency(200_000),
-    )
+    );
+
+    override val upgrades: List<Medium>
+        get() = values()
+            .dropWhile { it.ordinal <= this.ordinal }
+            .take(1)
 }
 
 enum class Costs(val cost: Int) {
