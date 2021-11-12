@@ -1,4 +1,4 @@
-package com.will118.scoville2000
+package com.will118.scoville2000.components.game
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures

@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
+import com.will118.scoville2000.components.game.Game
 import com.will118.scoville2000.engine.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -35,6 +36,7 @@ fun GameContainer(
         inventory = gameState.inventory,
         tool = gameState.tool.value,
         technologyLevel = gameState.technologyLevel.value,
+        technologies = gameState.technologies,
         onPlantPotTap = { gameStateExecutor.enqueueSync(HarvestOrCompost(it)) },
         sell = { gameStateExecutor.enqueueSync(SellProduce(it)) },
         plantSeed = { gameStateExecutor.enqueueSync(PlantSeed(it)) },
@@ -42,5 +44,6 @@ fun GameContainer(
         upgradeMedium = { gameStateExecutor.enqueueSync(UpgradeMedium(it)) },
         upgradeArea = { gameStateExecutor.enqueueSync(UpgradeArea(it)) },
         upgradeTool = { gameStateExecutor.enqueueSync(UpgradeTool(it)) },
+        purchaseTechnology = { gameStateExecutor.enqueueSync(PurchaseTechnology(it)) },
     )
 }

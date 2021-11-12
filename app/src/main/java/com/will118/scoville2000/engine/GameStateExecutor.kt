@@ -19,6 +19,7 @@ data class UpgradeLight(val light: Light) : GameOperation
 data class UpgradeMedium(val medium: Medium) : GameOperation
 data class UpgradeArea(val area: Area) : GameOperation
 data class UpgradeTool(val tool: Tool) : GameOperation
+data class PurchaseTechnology(val technology: Technology) : GameOperation
 
 @ExperimentalCoroutinesApi
 class GameStateExecutor(
@@ -47,6 +48,7 @@ class GameStateExecutor(
             is UpgradeMedium -> gameState.buyMediumUpgrade(operation.medium)
             is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
             is UpgradeTool -> gameState.buyToolUpgrade(operation.tool)
+            is PurchaseTechnology -> gameState.buyTechnology(operation.technology)
         }
 
         return true

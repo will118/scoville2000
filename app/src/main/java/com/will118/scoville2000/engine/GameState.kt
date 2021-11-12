@@ -32,6 +32,9 @@ class GameState(private val gameStateData: GameStateData) {
     private val _plantPots = gameStateData.plantPots.toMutableStateList()
     val plantPots: SnapshotStateList<PlantPot> by ::_plantPots
 
+    private val _technologies = gameStateData.technologies.toMutableStateList()
+    val technologies: SnapshotStateList<Technology> by ::_technologies
+
     private val _light = mutableStateOf(gameStateData.light)
     val light: State<Light> by ::_light
 
@@ -96,6 +99,8 @@ class GameState(private val gameStateData: GameStateData) {
             val isRipe = it.isRipe(millis) && initialRipe
             val isDead = it.isDead(millis) && !initialRipe
 
+            // TODO: this does loads of unnecessary work.
+            //      I should make it recurse in a direction, or something more elegant.
             if (isRipe || isDead) {
                 // get index first, as we replace with a new immutable object
                 val centerIndex = _plantPots.indexOf(pot)
@@ -189,6 +194,20 @@ class GameState(private val gameStateData: GameStateData) {
         }
     }
 
+    fun buyTechnology(desiredTechnology: Technology) {
+        if (deductPurchaseCost(desiredTechnology)) {
+            _technologies.add(desiredTechnology)
+
+            val techLevel = desiredTechnology.visibilityLevel
+
+            // Increase current tech level if higher
+            if (gameStateData.technologyLevel < techLevel) {
+                gameStateData.technologyLevel = techLevel
+                _technologyLevel.value = techLevel
+            }
+        }
+    }
+
     fun buyAreaUpgrade(desiredArea: Area) {
         if (deductPurchaseCost(desiredArea)) {
             _plantPots.addAll(
@@ -265,5 +284,6 @@ class GameState(private val gameStateData: GameStateData) {
     fun snapshot() = gameStateData.copy(
         plantPots = _plantPots.toList(),
         inventory = _inventory.toList().map { it.copy(second = it.second.copy()) },
+        technologies = _technologies.toList(),
     )
 }
