@@ -31,7 +31,7 @@ class GameStateExecutor(
     private val onSaveTick: suspend (GameStateData) -> Unit,
 ) {
     companion object {
-        const val TICK_PERIOD_MS = 16L
+        const val TICK_PERIOD_MS = 250L
         const val SAVE_PERIOD_MS = 1_000L
     }
 

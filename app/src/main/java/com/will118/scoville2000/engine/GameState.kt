@@ -24,7 +24,7 @@ fun MutableList<() -> Boolean>.tryPopFirst() {
 
 class GameState(private val data: GameStateData) {
     private companion object {
-        val MILLIS_PER_TICK = Duration.ofMinutes(30).toMillis()
+        val MILLIS_PER_TICK = Duration.ofHours(6).toMillis()
         val MILLIS_PER_DAY = Duration.ofDays(1).toMillis()
         val MILLIS_PER_WEEK = Duration.ofDays(7).toMillis()
         val MILLIS_PER_MONTH = Duration.ofDays(31).toMillis()
@@ -409,12 +409,16 @@ class GameState(private val data: GameStateData) {
     }
 
     fun onTick(): Boolean {
-        data.dateMillis += MILLIS_PER_TICK
+        val tickSize = if (_technologies.contains(Technology.TemporalDistortionField))
+            MILLIS_PER_TICK * 4
+        else
+            MILLIS_PER_TICK
+
+        data.dateMillis += tickSize
         _dateMillis.postValue(data.dateMillis)
 
-        data.milliCounter += MILLIS_PER_TICK
+        data.milliCounter += tickSize
 
-        // TODO: kind of no point ticking 60fps if we only do stuff every second
         if (data.milliCounter >= MILLIS_PER_DAY) {
             data.milliCounter -= MILLIS_PER_DAY
 
