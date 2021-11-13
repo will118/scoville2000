@@ -28,12 +28,15 @@ fun Game(
     tool: Tool,
     technologyLevel: TechnologyLevel,
     plantPots: SnapshotStateList<PlantPot>,
-    inventory: SnapshotStateMap<PlantType, StockLevel>,
+    distillateInventory: SnapshotStateMap<Distillate, StockLevel>,
+    pepperInventory: SnapshotStateMap<PlantType, StockLevel>,
     technologies: SnapshotStateList<Technology>,
     plantTypes: SnapshotStateList<PlantType>,
     autoPlantChecked: (PlantType, Boolean) -> Unit,
     onPlantPotTap: (PlantPot) -> Unit,
-    sell: (PlantType) -> Unit,
+    sellDistillate: (Distillate) -> Unit,
+    sellPeppers: (PlantType) -> Unit,
+    distill: (Distillate) -> Unit,
     upgradeArea: (Area) -> Unit,
     upgradeMedium: (Medium) -> Unit,
     upgradeLight: (Light) -> Unit,
@@ -63,8 +66,10 @@ fun Game(
         )
         Divider(modifier = dividerPadding)
         InventorySection(
-            inventory = inventory,
-            sell = sell,
+            distillateInventory = distillateInventory,
+            pepperInventory = pepperInventory,
+            sellDistillate = sellDistillate,
+            sellPeppers = sellPeppers,
         )
         Divider(modifier = dividerPadding)
         StatSection(
@@ -102,6 +107,12 @@ fun Game(
                     purchaseTechnology = purchaseTechnology,
                 )
             }
+        }
+        if (technologies.contains(Technology.ScovilleDistillery)) {
+            Divider(modifier = dividerPadding)
+            DistillerySection(
+                distill = distill
+            )
         }
         Spacer(modifier = Modifier.height(15.dp))
     }

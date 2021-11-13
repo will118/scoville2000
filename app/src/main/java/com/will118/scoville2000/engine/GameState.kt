@@ -12,33 +12,114 @@ import kotlinx.serialization.Serializable
 import java.time.Duration
 
 @Serializable
-data class StockLevel(var peppers: Long)
+data class StockLevel(val quantity: Long)
+
+fun MutableList<() -> Boolean>.tryPopFirst() {
+    firstOrNull()?.let {
+        if (it()) {
+            removeAt(0)
+        }
+    }
+}
 
 class GameState(private val data: GameStateData) {
     private companion object {
         val MILLIS_PER_TICK = Duration.ofMinutes(30).toMillis()
         val MILLIS_PER_DAY = Duration.ofDays(1).toMillis()
+        val MILLIS_PER_WEEK = Duration.ofDays(7).toMillis()
         val MILLIS_PER_MONTH = Duration.ofDays(31).toMillis()
     }
 
-    private val progressionStack = mutableListOf<() -> Boolean>(
-        {
-            if (data.dateMillis - data.epochMillis > MILLIS_PER_MONTH) {
-                data.technologyLevel = TechnologyLevel.Basic
-                _technologyLevel.value = TechnologyLevel.Basic
-                true
-            } else {
-                false
+    private fun techProgression(
+        targetLevel: TechnologyLevel,
+        millisElapsed: Long,
+        condition: () -> Boolean,
+    ): () -> Boolean {
+        return {
+            when {
+                data.technologyLevel == targetLevel -> true
+                data.dateMillis - data.epochMillis > millisElapsed && condition() -> {
+                    data.technologyLevel = targetLevel
+                    _technologyLevel.value = targetLevel
+                    true
+                }
+                else -> false
             }
         }
-        // TODO: use this stuff
+    }
+
+    // These need to be idempotent as not persisted.
+    private val progressionStack = mutableListOf(
+        techProgression(
+            targetLevel = TechnologyLevel.Basic,
+            millisElapsed = MILLIS_PER_MONTH,
+            condition = { true },
+        ),
+        techProgression(
+            targetLevel = TechnologyLevel.Intermediate,
+            millisElapsed =  12 * MILLIS_PER_MONTH,
+            condition = { true },
+        ),
+//        techProgression(
+//            targetLevel = TechnologyLevel.Advanced,
+//            millisElapsed =  5 * 12 * MILLIS_PER_MONTH,
+//            condition = { true },
+//        ),
+//        techProgression(
+//            targetLevel = TechnologyLevel.Quantum,
+//            millisElapsed =  10 * 12 * MILLIS_PER_MONTH,
+//            condition = { true },
+//        ),
+    )
+
+    private fun plantTypeProgression(
+        plantType: PlantType,
+        millisElapsed: Long,
+        condition: () -> Boolean,
+    ): () -> Boolean {
+        return {
+            when {
+                _plantTypes.contains(plantType) -> true
+                data.dateMillis - data.epochMillis > millisElapsed && condition() -> {
+                    _plantTypes.add(plantType)
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private val plantTypeStack = mutableListOf(
+        plantTypeProgression(
+            plantType = PlantType.Poblano,
+            millisElapsed = MILLIS_PER_DAY,
+            condition = { true },
+        ),
+        plantTypeProgression(
+            plantType = PlantType.Guajillo,
+            millisElapsed = MILLIS_PER_WEEK,
+            condition = { true },
+        ),
+        plantTypeProgression(
+            plantType = PlantType.Jalapeno,
+            millisElapsed = 3 * MILLIS_PER_WEEK,
+            condition = { true },
+        ),
+        plantTypeProgression(
+            plantType = PlantType.BirdsEye,
+            millisElapsed = 2 * MILLIS_PER_MONTH,
+            condition = { true },
+        ),
     )
 
     private val _balance = MutableLiveData(data.balance)
     val balance: LiveData<Currency> by ::_balance
 
-    private val _inventory = data.inventory.toMutableStateMap()
-    val inventory: SnapshotStateMap<PlantType, StockLevel> by ::_inventory
+    private val _pepperInventory = data.pepperInventory.toMutableStateMap()
+    val pepperInventory: SnapshotStateMap<PlantType, StockLevel> by ::_pepperInventory
+
+    private val _distillateInventory = data.distillateInventory.toMutableStateMap()
+    val distillateInventory: SnapshotStateMap<Distillate, StockLevel> by ::_distillateInventory
 
     private val _area = mutableStateOf(data.area)
     val area: State<Area> by ::_area
@@ -97,9 +178,9 @@ class GameState(private val data: GameStateData) {
 
             for (pot in pots) {
                 if (isHarvesting) {
-                    _inventory.compute(pot.plant!!.plantType) { _, stock ->
+                    _pepperInventory.compute(pot.plant!!.plantType) { _, stock ->
                         StockLevel(
-                            peppers = pot.plant.harvest().plus(stock?.peppers ?: 0)
+                            quantity = pot.plant.harvest().plus(stock?.quantity ?: 0)
                         )
                     }
                 }
@@ -182,12 +263,23 @@ class GameState(private val data: GameStateData) {
         _plantPots[_plantPots.indexOf(plantPot)] = PlantPot(plant = null)
     }
 
-    fun sellProduce(plantType: PlantType) {
-        _inventory[plantType]?.let {
-            _inventory[plantType] = StockLevel(peppers = 0)
+    fun sellPeppers(plantType: PlantType) {
+        _pepperInventory[plantType]?.let {
+            _pepperInventory[plantType] = StockLevel(quantity = 0)
             data.balance = data.balance.copy(
                 total = data.balance.total
-                    .plus(buyer.total(plantType = plantType, peppers = it.peppers))
+                    .plus(buyer.total(plantType = plantType, quantity = it.quantity))
+            )
+            _balance.postValue(data.balance)
+        }
+    }
+
+    fun sellDistillate(distillate: Distillate) {
+        _distillateInventory[distillate]?.let {
+            _distillateInventory[distillate] = StockLevel(quantity = 0)
+            data.balance = data.balance.copy(
+                total = data.balance.total
+                    .plus(buyer.total(distillate = distillate, quantity = it.quantity))
             )
             _balance.postValue(data.balance)
         }
@@ -269,6 +361,36 @@ class GameState(private val data: GameStateData) {
         }
     }
 
+    fun distill(distillate: Distillate) {
+        val totalScovilles = _pepperInventory.entries
+            .sumOf { it.key.scovilles * it.value.quantity }
+
+        if (totalScovilles < distillate.requiredScovilles.count) {
+            return
+        }
+
+        var requiredScovilles = distillate.requiredScovilles.count
+
+        loop@for (plantType in _pepperInventory.keys) {
+            val stock = _pepperInventory[plantType]!!
+            for (consumed in 1..stock.quantity) {
+                requiredScovilles -= plantType.scovilles
+                if (requiredScovilles <= 0) {
+                    _pepperInventory[plantType] = StockLevel(
+                        quantity = stock.quantity - consumed
+                    )
+                    break@loop;
+                }
+            }
+            _pepperInventory[plantType] = StockLevel(quantity = 0)
+        }
+
+        _distillateInventory.compute(distillate) { _, stock ->
+            stock?.copy(quantity = stock.quantity + 1)
+                ?: StockLevel(quantity = 1)
+        }
+    }
+
     fun toggleAutoHarvesting() {
         val newState = !data.autoHarvestEnabled
         data.autoHarvestEnabled = newState
@@ -327,6 +449,9 @@ class GameState(private val data: GameStateData) {
                     }
                 }
             }
+
+//            progressionStack.tryPopFirst()
+            plantTypeStack.tryPopFirst()
         }
 
         return false
@@ -334,7 +459,8 @@ class GameState(private val data: GameStateData) {
 
     fun snapshot() = data.copy(
         plantPots = _plantPots.toList(),
-        inventory = _inventory.toList().map { it.copy(second = it.second.copy()) },
+        pepperInventory = _pepperInventory.toList(),
+        distillateInventory = _distillateInventory.toList(),
         technologies = _technologies.toList(),
         plantTypes = _plantTypes.toList(),
     )

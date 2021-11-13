@@ -12,7 +12,8 @@ sealed interface GameOperation
 
 object Tick : GameOperation
 object Save : GameOperation
-data class SellProduce(val plantType: PlantType) : GameOperation
+data class SellPeppers(val plantType: PlantType) : GameOperation
+data class SellDistillate(val distillate: Distillate) : GameOperation
 object ToggleAutoHarvesting : GameOperation
 data class HarvestOrCompost(val plantPot: PlantPot) : GameOperation
 data class AutoPlantChecked(val plantType: PlantType, val checked: Boolean) : GameOperation
@@ -21,6 +22,7 @@ data class UpgradeLight(val light: Light) : GameOperation
 data class UpgradeMedium(val medium: Medium) : GameOperation
 data class UpgradeArea(val area: Area) : GameOperation
 data class UpgradeTool(val tool: Tool) : GameOperation
+data class Distill(val distillate: Distillate) : GameOperation
 data class PurchaseTechnology(val technology: Technology) : GameOperation
 
 @ExperimentalCoroutinesApi
@@ -45,7 +47,8 @@ class GameStateExecutor(
             }
             is HarvestOrCompost -> gameState.harvestOrCompost(operation.plantPot)
             is PlantSeed -> gameState.plantSeed(operation.seed)
-            is SellProduce -> gameState.sellProduce(operation.plantType)
+            is SellPeppers -> gameState.sellPeppers(operation.plantType)
+            is SellDistillate -> gameState.sellDistillate(operation.distillate)
             is UpgradeLight -> gameState.buyLightUpgrade(operation.light)
             is UpgradeMedium -> gameState.buyMediumUpgrade(operation.medium)
             is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
@@ -53,6 +56,7 @@ class GameStateExecutor(
             is PurchaseTechnology -> gameState.buyTechnology(operation.technology)
             is AutoPlantChecked -> gameState.autoPlantChecked(operation.plantType, operation.checked)
             is ToggleAutoHarvesting -> gameState.toggleAutoHarvesting()
+            is Distill -> gameState.distill(operation.distillate)
         }
 
         return true

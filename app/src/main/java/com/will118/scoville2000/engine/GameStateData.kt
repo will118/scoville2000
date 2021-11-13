@@ -29,15 +29,12 @@ data class GameStateData(
     val epochMillis: Long = Instant.now().toEpochMilli(), // Used to determine progression
     var dateMillis: Long = epochMillis,
     val plantPots: List<PlantPot> = List(area.total) { PlantPot(plant = null) },
-    val inventory: List<Pair<PlantType, StockLevel>> = listOf(
-        Pair(PlantType.BellPepper, StockLevel(peppers = 5)),
+    val pepperInventory: List<Pair<PlantType, StockLevel>> = listOf(
+        Pair(PlantType.BellPepper, StockLevel(quantity = 5)),
     ),
+    val distillateInventory: List<Pair<Distillate, StockLevel>> = emptyList(),
     val technologies: List<Technology> = emptyList(),
     val plantTypes: List<PlantType> = listOf(
         PlantType.BellPepper,
-        PlantType.Poblano,
-        PlantType.Guajillo,
-        PlantType.Jalapeno,
-        PlantType.BirdsEye
-    ),
+    )
 )

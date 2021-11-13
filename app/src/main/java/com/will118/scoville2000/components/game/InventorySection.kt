@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.will118.scoville2000.engine.Distillate
 import com.will118.scoville2000.engine.PlantType
 import com.will118.scoville2000.engine.StockLevel
 import com.will118.scoville2000.ui.theme.Typography
@@ -18,8 +19,10 @@ import com.will118.scoville2000.ui.theme.Typography
 @ExperimentalFoundationApi
 @Composable
 fun InventorySection(
-    inventory: SnapshotStateMap<PlantType, StockLevel>,
-    sell: (PlantType) -> Unit
+    distillateInventory: SnapshotStateMap<Distillate, StockLevel>,
+    pepperInventory: SnapshotStateMap<PlantType, StockLevel>,
+    sellDistillate: (Distillate) -> Unit,
+    sellPeppers: (PlantType) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(text = "Inventory", style = Typography.h5)
@@ -27,19 +30,43 @@ fun InventorySection(
         Table(
             columns = listOf(
                 TableColumn(header = "Type"),
-                TableColumn(header = "Peppers"),
+                TableColumn(header = "Quantity"),
                 TableColumn(header = ""),
             ),
-            items = inventory.asSequence().filter { it.value.peppers > 0 },
+            items = pepperInventory.asSequence().filter { it.value.quantity > 0 },
             renderItem = { column, item ->
                 when (column.index) {
                     0 -> TableCellText(text = item.key.displayName)
-                    1 -> TableCellText(text = "${item.value.peppers}")
-                    2 -> TextButton(onClick = { sell(item.key) }) {
+                    1 -> TableCellText(text = "${item.value.quantity}")
+                    2 -> TextButton(onClick = { sellPeppers(item.key) }) {
                         Text(text = "Sell")
                     }
                 }
             }
         )
+
+        val distillates = distillateInventory
+            .filter { it.value.quantity > 0 }
+
+        if (distillates.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Table(
+                columns = listOf(
+                    TableColumn(header = null),
+                    TableColumn(header = null),
+                    TableColumn(header = null),
+                ),
+                items = distillates.asSequence(),
+                renderItem = { column, item ->
+                    when (column.index) {
+                        0 -> TableCellText(text = item.key.displayName)
+                        1 -> TableCellText(text = "${item.value.quantity}")
+                        2 -> TextButton(onClick = { sellDistillate(item.key) }) {
+                            Text(text = "Sell")
+                        }
+                    }
+                }
+            )
+        }
     }
 }

@@ -46,6 +46,23 @@ data class PlantType(
     }
 
     fun toSeed() = Seed(this)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as PlantType
+
+        if (displayName != other.displayName) return false
+        // TODO: may want to remove this
+        if (scovilles != other.scovilles) return false
+        if (phases != other.phases) return false
+        // TODO: may want to remove this
+        if (cost != other.cost) return false
+
+        return true
+    }
+
 }
 
 @Serializable
