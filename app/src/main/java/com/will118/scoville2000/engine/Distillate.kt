@@ -2,7 +2,7 @@ package com.will118.scoville2000.engine
 
 data class Scovilles(val count: Long) {
     override fun toString(): String {
-        return "${"%,d".format(count)}"
+        return "%,d".format(count)
     }
 }
 
