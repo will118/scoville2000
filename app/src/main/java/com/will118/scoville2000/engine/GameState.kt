@@ -14,52 +14,72 @@ import java.time.Duration
 @Serializable
 data class StockLevel(var peppers: Long)
 
-class GameState(private val gameStateData: GameStateData) {
+class GameState(private val data: GameStateData) {
     private companion object {
         val MILLIS_PER_TICK = Duration.ofMinutes(30).toMillis()
-        val MILLIS_PER_COST_TICK = Duration.ofDays(1).toMillis()
+        val MILLIS_PER_DAY = Duration.ofDays(1).toMillis()
+        val MILLIS_PER_MONTH = Duration.ofDays(31).toMillis()
     }
 
-    private val _balance = MutableLiveData(gameStateData.balance)
+    private val progressionStack = mutableListOf<() -> Boolean>(
+        {
+            if (data.dateMillis - data.epochMillis > MILLIS_PER_MONTH) {
+                data.technologyLevel = TechnologyLevel.Basic
+                _technologyLevel.value = TechnologyLevel.Basic
+                true
+            } else {
+                false
+            }
+        }
+        // TODO: use this stuff
+    )
+
+    private val _balance = MutableLiveData(data.balance)
     val balance: LiveData<Currency> by ::_balance
 
-    private val _inventory = gameStateData.inventory.toMutableStateMap()
+    private val _inventory = data.inventory.toMutableStateMap()
     val inventory: SnapshotStateMap<PlantType, StockLevel> by ::_inventory
 
-    private val _area = mutableStateOf(gameStateData.area)
+    private val _area = mutableStateOf(data.area)
     val area: State<Area> by ::_area
 
-    private val _plantPots = gameStateData.plantPots.toMutableStateList()
+    private val _plantPots = data.plantPots.toMutableStateList()
     val plantPots: SnapshotStateList<PlantPot> by ::_plantPots
 
-    private val _technologies = gameStateData.technologies.toMutableStateList()
+    private val _technologies = data.technologies.toMutableStateList()
     val technologies: SnapshotStateList<Technology> by ::_technologies
 
-    private val _light = mutableStateOf(gameStateData.light)
+    private val _plantTypes = data.plantTypes.toMutableStateList()
+    val plantTypes: SnapshotStateList<PlantType> by ::_plantTypes
+
+    private val _light = mutableStateOf(data.light)
     val light: State<Light> by ::_light
 
-    private val _medium = mutableStateOf(gameStateData.medium)
+    private val _medium = mutableStateOf(data.medium)
     val medium: State<Medium> by ::_medium
 
-    private val _tool = mutableStateOf(gameStateData.tool)
+    private val _tool = mutableStateOf(data.tool)
     val tool: State<Tool> by ::_tool
 
-    private val _technologyLevel = mutableStateOf(gameStateData.technologyLevel)
+    private val _technologyLevel = mutableStateOf(data.technologyLevel)
     val technologyLevel: State<TechnologyLevel> by ::_technologyLevel
+
+    private val _autoHarvestEnabled = mutableStateOf(data.autoHarvestEnabled)
+    val autoHarvestEnabled: State<Boolean> by ::_autoHarvestEnabled
 
     // Using LiveData to get around an issue at startup where we try and read a value
     // before it is snapshot.
-    private val _dateMillis = MutableLiveData(gameStateData.dateMillis)
+    private val _dateMillis = MutableLiveData(data.dateMillis)
     val dateMillis: LiveData<Long> by ::_dateMillis
 
     var buyer = Buyer.Friends
         private set
 
     val id: GameId
-        get() = gameStateData.id
+        get() = data.id
 
     fun harvestOrCompost(plantPot: PlantPot) {
-        val millis = gameStateData.dateMillis
+        val millis = data.dateMillis
 
         plantPot.plant?.let {
             val isHarvesting = it.isRipe(millis)
@@ -70,7 +90,7 @@ class GameState(private val gameStateData: GameStateData) {
                 initialRipe = isHarvesting,
             )
 
-            val pots = when (gameStateData.tool) {
+            val pots = when (data.tool) {
                 Tool.Scythe -> allPots
                 Tool.None -> allPots.take(1)
             }
@@ -94,7 +114,7 @@ class GameState(private val gameStateData: GameStateData) {
         millis: Long,
         initialRipe: Boolean,
     ): Sequence<PlantPot> = sequence {
-        val dimension = gameStateData.area.dimension
+        val dimension = data.area.dimension
         pot.plant?.let {
             val isRipe = it.isRipe(millis) && initialRipe
             val isDead = it.isDead(millis) && !initialRipe
@@ -165,31 +185,31 @@ class GameState(private val gameStateData: GameStateData) {
     fun sellProduce(plantType: PlantType) {
         _inventory[plantType]?.let {
             _inventory[plantType] = StockLevel(peppers = 0)
-            gameStateData.balance = gameStateData.balance.copy(
-                total = gameStateData.balance.total
+            data.balance = data.balance.copy(
+                total = data.balance.total
                     .plus(buyer.total(plantType = plantType, peppers = it.peppers))
             )
-            _balance.postValue(gameStateData.balance)
+            _balance.postValue(data.balance)
         }
     }
 
     fun buyLightUpgrade(desiredLight: Light) {
         if (deductPurchaseCost(desiredLight)) {
-            gameStateData.light = desiredLight
+            data.light = desiredLight
             _light.value = desiredLight
         }
     }
 
     fun buyMediumUpgrade(desiredMedium: Medium) {
         if (deductPurchaseCost(desiredMedium)) {
-            gameStateData.medium = desiredMedium
+            data.medium = desiredMedium
             _medium.value = desiredMedium
         }
     }
 
     fun buyToolUpgrade(desiredTool: Tool) {
         if (deductPurchaseCost(desiredTool)) {
-            gameStateData.tool = desiredTool
+            data.tool = desiredTool
             _tool.value = desiredTool
         }
     }
@@ -197,37 +217,42 @@ class GameState(private val gameStateData: GameStateData) {
     fun buyTechnology(desiredTechnology: Technology) {
         if (deductPurchaseCost(desiredTechnology)) {
             _technologies.add(desiredTechnology)
-
-            val techLevel = desiredTechnology.visibilityLevel
-
-            // Increase current tech level if higher
-            if (gameStateData.technologyLevel < techLevel) {
-                gameStateData.technologyLevel = techLevel
-                _technologyLevel.value = techLevel
-            }
         }
     }
 
     fun buyAreaUpgrade(desiredArea: Area) {
         if (deductPurchaseCost(desiredArea)) {
             _plantPots.addAll(
-                List(desiredArea.total - gameStateData.area.total) { PlantPot(plant = null) }
+                List(desiredArea.total - data.area.total) { PlantPot(plant = null) }
             )
-            gameStateData.area = desiredArea
+            data.area = desiredArea
             _area.value = desiredArea
         }
     }
 
     private fun deductPurchaseCost(upgrade: Purchasable): Boolean {
         val cost = upgrade.cost!!.total
-        if (gameStateData.balance.total >= cost) {
-            gameStateData.balance = gameStateData.balance.copy(
-                total = gameStateData.balance.total - cost
+        if (data.balance.total >= cost) {
+            data.balance = data.balance.copy(
+                total = data.balance.total - cost
             )
             return true
         }
 
         return false
+    }
+
+    fun autoPlantChecked(plantType: PlantType, checked: Boolean) {
+        if (technologies.contains(Technology.AutoPlanter)) {
+            for (i in 0 until _plantTypes.size) {
+                val p = _plantTypes[i]
+                if (p == plantType) {
+                    _plantTypes[i] = p.copy(autoPlantChecked = checked)
+                } else if (checked && p.autoPlantChecked) {
+                    _plantTypes[i] = p.copy(autoPlantChecked = false)
+                }
+            }
+        }
     }
 
     fun plantSeed(seed: Seed) {
@@ -236,54 +261,81 @@ class GameState(private val gameStateData: GameStateData) {
             _plantPots[index] = PlantPot(
                 plant = Plant(
                     plantType = seed.plantType,
-                    epochMillis = gameStateData.dateMillis,
-                    lightStrength = gameStateData.light.strength,
-                    mediumEffectiveness = gameStateData.medium.effectiveness,
+                    epochMillis = data.dateMillis,
+                    lightStrength = data.light.strength,
+                    mediumEffectiveness = data.medium.effectiveness,
                 )
             )
         }
     }
 
+    fun toggleAutoHarvesting() {
+        val newState = !data.autoHarvestEnabled
+        data.autoHarvestEnabled = newState
+        _autoHarvestEnabled.value = newState
+    }
+
     private fun calculateCosts(): Long {
-        val light = gameStateData.light
-        val medium = gameStateData.medium
+        val light = data.light
+        val medium = data.medium
 
         return (light.joulesPerCostTick.toLong() * Costs.ElectricityJoule.cost)
          .plus(medium.litresPerCostTick * Costs.WaterLitre.cost)
          .times(
-             _plantPots
-                 .count { it.plant?.isGrowing(gameStateData.dateMillis) == true }
+             _plantPots.count { it.plant?.isGrowing(data.dateMillis) == true }
          )
     }
 
     fun onTick(): Boolean {
-        gameStateData.dateMillis += MILLIS_PER_TICK
-        _dateMillis.postValue(gameStateData.dateMillis)
+        data.dateMillis += MILLIS_PER_TICK
+        _dateMillis.postValue(data.dateMillis)
 
-        gameStateData.milliCounter += MILLIS_PER_TICK
+        data.milliCounter += MILLIS_PER_TICK
 
-        if (gameStateData.milliCounter >= MILLIS_PER_COST_TICK) {
-            gameStateData.milliCounter -= MILLIS_PER_COST_TICK
+        // TODO: kind of no point ticking 60fps if we only do stuff every second
+        if (data.milliCounter >= MILLIS_PER_DAY) {
+            data.milliCounter -= MILLIS_PER_DAY
 
             calculateCosts().also {
-                if (it > gameStateData.balance.total) {
+                if (it > data.balance.total) {
                     return true
                 }
 
-                gameStateData.balance = gameStateData.balance.copy(
-                    total = gameStateData.balance.total - it
+                data.balance = data.balance.copy(
+                    total = data.balance.total - it
                 )
+
+                _balance.postValue(data.balance)
+            }
+
+            technologies
+                .filter { it == Technology.AutoPlanter }
+                .forEach { _ ->
+                    val autoPlant = _plantTypes.firstOrNull { it.autoPlantChecked }
+                    if (autoPlant != null) {
+                        plantSeed(autoPlant.toSeed())
+                    }
+                }
+
+            if (technologies.contains(Technology.AutoHarvester)
+                && data.autoHarvestEnabled) {
+                for (i in 0 until _plantPots.size) {
+                    val pot = _plantPots[i]
+                    if (pot.plant?.isRipe(data.dateMillis) == true
+                        || pot.plant?.isDead(data.dateMillis) == true) {
+                        harvestOrCompost(pot)
+                    }
+                }
             }
         }
-
-        _balance.postValue(gameStateData.balance)
 
         return false
     }
 
-    fun snapshot() = gameStateData.copy(
+    fun snapshot() = data.copy(
         plantPots = _plantPots.toList(),
         inventory = _inventory.toList().map { it.copy(second = it.second.copy()) },
         technologies = _technologies.toList(),
+        plantTypes = _plantTypes.toList(),
     )
 }

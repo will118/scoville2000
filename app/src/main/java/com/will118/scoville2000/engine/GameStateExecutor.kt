@@ -13,7 +13,9 @@ sealed interface GameOperation
 object Tick : GameOperation
 object Save : GameOperation
 data class SellProduce(val plantType: PlantType) : GameOperation
+object ToggleAutoHarvesting : GameOperation
 data class HarvestOrCompost(val plantPot: PlantPot) : GameOperation
+data class AutoPlantChecked(val plantType: PlantType, val checked: Boolean) : GameOperation
 data class PlantSeed(val seed: Seed) : GameOperation
 data class UpgradeLight(val light: Light) : GameOperation
 data class UpgradeMedium(val medium: Medium) : GameOperation
@@ -49,6 +51,8 @@ class GameStateExecutor(
             is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
             is UpgradeTool -> gameState.buyToolUpgrade(operation.tool)
             is PurchaseTechnology -> gameState.buyTechnology(operation.technology)
+            is AutoPlantChecked -> gameState.autoPlantChecked(operation.plantType, operation.checked)
+            is ToggleAutoHarvesting -> gameState.toggleAutoHarvesting()
         }
 
         return true

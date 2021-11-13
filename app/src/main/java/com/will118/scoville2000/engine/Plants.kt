@@ -5,48 +5,45 @@ import java.time.Duration
 import java.time.Instant
 
 @Serializable
-enum class PlantType(
+data class PlantType(
     override val displayName: String,
     val scovilles: Long,
     val phases: Phases,
     override val cost: Currency?, // For seeds
+    val autoPlantChecked: Boolean = false,
 ): Describe, Purchasable {
-    BellPepper(
-        displayName = "Bell Pepper",
-        scovilles = 0,
-        phases = Phases.DEFAULT,
-        cost = Currency(2),
-    ),
-    Poblano(
-        displayName = "Poblano",
-        scovilles = 2_000,
-        phases = Phases.DEFAULT,
-        cost = Currency(20),
-    ),
-    Guajillo(
-        displayName = "Guajillo",
-        scovilles = 3_000,
-        phases = Phases.DEFAULT,
-        cost = Currency(50),
-    ),
-    Jalapeno(
-        displayName = "Jalapeño",
-        scovilles = 6_000,
-        phases = Phases.DEFAULT,
-        cost = Currency(100),
-    ),
-    BirdsEye(
-        displayName = "Bird's Eye",
-        scovilles = 75_000,
-        phases = Phases.DEFAULT,
-        cost = Currency(200),
-    ),
-    Evolcano(
-        displayName = "Evolcano",
-        scovilles = 100_000,
-        phases = Phases.DEFAULT,
-        cost = null,
-    );
+    companion object {
+        val BellPepper = PlantType(
+            displayName = "Bell Pepper",
+            scovilles = 0,
+            phases = Phases.DEFAULT,
+            cost = Currency(2),
+        )
+        val Poblano = PlantType(
+            displayName = "Poblano",
+            scovilles = 2_000,
+            phases = Phases.DEFAULT,
+            cost = Currency(20),
+        )
+        val Guajillo = PlantType(
+            displayName = "Guajillo",
+            scovilles = 3_000,
+            phases = Phases.DEFAULT,
+            cost = Currency(50),
+        )
+        val Jalapeno = PlantType(
+            displayName = "Jalapeño",
+            scovilles = 6_000,
+            phases = Phases.DEFAULT,
+            cost = Currency(100),
+        )
+        val BirdsEye = PlantType(
+            displayName = "Bird's Eye",
+            scovilles = 75_000,
+            phases = Phases.DEFAULT,
+            cost = Currency(200),
+        )
+    }
 
     fun toSeed() = Seed(this)
 }

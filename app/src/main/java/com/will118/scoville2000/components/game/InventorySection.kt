@@ -25,18 +25,18 @@ fun InventorySection(
         Text(text = "Inventory", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
         Table(
-            headers = listOf("Type", "Peppers", ""),
+            columns = listOf(
+                TableColumn(header = "Type"),
+                TableColumn(header = "Peppers"),
+                TableColumn(header = ""),
+            ),
             items = inventory.asSequence().filter { it.value.peppers > 0 },
             renderItem = { column, item ->
                 when (column.index) {
                     0 -> TableCellText(text = item.key.displayName)
                     1 -> TableCellText(text = "${item.value.peppers}")
-                    2 -> {
-                        TextButton(onClick = { sell(item.key) }) {
-                            Text(
-                                text = "Sell",
-                            )
-                        }
+                    2 -> TextButton(onClick = { sell(item.key) }) {
+                        Text(text = "Sell")
                     }
                 }
             }

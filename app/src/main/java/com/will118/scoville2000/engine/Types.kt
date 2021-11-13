@@ -52,6 +52,11 @@ enum class Area(
         dimension = 16,
         displayName = "Warehouse",
         cost = Currency(90_000_000),
+    ),
+    BusinessPark(
+        dimension = 32,
+        displayName = "Business Park",
+        cost = Currency(1_000_000_000),
     );
 
     override val upgrades: List<Area>

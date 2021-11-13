@@ -9,21 +9,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.will118.scoville2000.engine.Technology
-import com.will118.scoville2000.engine.TechnologyLevel
 import com.will118.scoville2000.ui.theme.Typography
 
 @Composable
 fun TechSection(
-    technologyLevel: TechnologyLevel,
+    visibleTechnologies: List<Technology>,
     purchaseTechnology: (Technology) -> Unit,
 ) {
     Column {
         Text(text = "Technology", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
         ShopTable(
-            items = technologyLevel
-                .visibleTechnologies()
-                .asSequence(),
+            items = visibleTechnologies.asSequence(),
             tableCellHeight = 45.dp
         ) {
             TextButton(onClick = { purchaseTechnology(it) }) {

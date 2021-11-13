@@ -38,7 +38,11 @@ fun <T> ShopTable(
     button: @Composable (T) -> Unit,
 ) where T : Describe, T : Purchasable {
     Table(
-        headers = listOf(null, null, null),
+        columns = listOf(
+            TableColumn(header = null),
+            TableColumn(header = null),
+            TableColumn(header = null),
+        ),
         items = items,
         renderItem = { column, item ->
             when (column.index) {
@@ -51,23 +55,25 @@ fun <T> ShopTable(
     )
 }
 
+data class TableColumn(val header: String?, val weight: Float = 1.0f)
+
 @Composable
 fun <T> Table(
-    headers: List<String?>,
+    columns: List<TableColumn>,
     items: Sequence<T>,
-    renderItem: @Composable (IndexedValue<String?>, T) -> Unit,
+    renderItem: @Composable (IndexedValue<TableColumn>, T) -> Unit,
     tableCellHeight: Dp = 35.dp,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        for (column in headers.withIndex()) {
+        for (column in columns.withIndex()) {
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(column.value.weight),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                column.value?.let {
+                column.value.header?.let {
                     Surface(
                         border = BorderStroke(1.dp, Color.LightGray),
                         modifier = Modifier

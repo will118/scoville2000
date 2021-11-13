@@ -1,9 +1,7 @@
 package com.will118.scoville2000.components.game
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
@@ -32,6 +30,8 @@ fun Game(
     plantPots: SnapshotStateList<PlantPot>,
     inventory: SnapshotStateMap<PlantType, StockLevel>,
     technologies: SnapshotStateList<Technology>,
+    plantTypes: SnapshotStateList<PlantType>,
+    autoPlantChecked: (PlantType, Boolean) -> Unit,
     onPlantPotTap: (PlantPot) -> Unit,
     sell: (PlantType) -> Unit,
     upgradeArea: (Area) -> Unit,
@@ -40,6 +40,8 @@ fun Game(
     upgradeTool: (Tool) -> Unit,
     plantSeed: (Seed) -> Unit,
     purchaseTechnology: (Technology) -> Unit,
+    autoHarvestEnabled: Boolean,
+    toggleAutoHarvesting: () -> Unit,
 ) {
     val dividerPadding = Modifier.padding(vertical = 15.dp)
 
@@ -51,10 +53,13 @@ fun Game(
             enabled = true
         )) {
         PlantSection(
+            technologies = technologies,
             plantPots = plantPots,
             area = area,
             dateMillis = dateMillis,
             onPlantPotTap = onPlantPotTap,
+            autoHarvestEnabled = autoHarvestEnabled,
+            toggleAutoHarvesting = toggleAutoHarvesting,
         )
         Divider(modifier = dividerPadding)
         InventorySection(
@@ -68,6 +73,7 @@ fun Game(
             light = light,
             medium = medium,
             buyer = buyer,
+            technologies = technologies,
         )
         Divider(modifier = dividerPadding)
         ShopSection(
@@ -76,18 +82,27 @@ fun Game(
             currentMedium = medium,
             currentTool = tool,
             currentTechnologies = technologies,
+            currentPlantTypes = plantTypes,
             plantSeed = plantSeed,
+            autoPlantChecked = autoPlantChecked,
             upgradeLight = upgradeLight,
             upgradeMedium = upgradeMedium,
             upgradeArea = upgradeArea,
             upgradeTool = upgradeTool,
         )
         if (technologyLevel != TechnologyLevel.None) {
-            Divider(modifier = dividerPadding)
-            TechSection(
-                technologyLevel = technologyLevel,
-                purchaseTechnology = purchaseTechnology,
-            )
+            val visibleTechs = technologyLevel
+                .visibleTechnologies()
+                .filter { it.repeatablyPurchasable || !technologies.contains(it) }
+
+            if (visibleTechs.isNotEmpty()) {
+                Divider(modifier = dividerPadding)
+                TechSection(
+                    visibleTechnologies = visibleTechs,
+                    purchaseTechnology = purchaseTechnology,
+                )
+            }
         }
+        Spacer(modifier = Modifier.height(15.dp))
     }
 }

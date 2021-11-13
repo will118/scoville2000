@@ -5,16 +5,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.will118.scoville2000.engine.Buyer
-import com.will118.scoville2000.engine.Currency
-import com.will118.scoville2000.engine.Light
-import com.will118.scoville2000.engine.Medium
+import com.will118.scoville2000.engine.*
 import com.will118.scoville2000.ui.theme.Typography
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -40,11 +38,14 @@ fun StatSection(
     light: Light,
     medium: Medium,
     buyer: Buyer,
+    technologies: SnapshotStateList<Technology>,
 ) {
     val dateTime = OffsetDateTime.ofInstant(
         Instant.ofEpochMilli(dateMillis),
         ZoneId.systemDefault()
     )
+
+    val autoPlanters = technologies.count { it == Technology.AutoPlanter }
 
     Column {
         Text(text = "Info", style = Typography.h5)
@@ -73,5 +74,12 @@ fun StatSection(
             name = "Price",
             value = "${buyer.pricePerScoville}/milliscoville (${buyer.displayName})",
         )
+        if (autoPlanters > 0) {
+            Spacer(modifier = Modifier.height(10.dp))
+            StatText(
+                name = "AutoPlanters",
+                value = "$autoPlanters",
+            )
+        }
     }
 }

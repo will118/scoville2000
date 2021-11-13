@@ -90,6 +90,7 @@ fun PlantGrid(
 
         val lines = Integer.max(1, area.dimension)
         val step = canvasHeight / lines
+        val gridStrokeWidth = if (lines >= 32) 1f else 4f
 
         for (i in (1 until lines)) {
             val offset = step * i
@@ -97,14 +98,14 @@ fun PlantGrid(
                 start = Offset(x = 0f, y = offset),
                 end = Offset(x = canvasWidth, y = offset),
                 color = Color.Black,
-                strokeWidth = 4f
+                strokeWidth = gridStrokeWidth
             )
 
             drawLine(
                 start = Offset(x = offset, y = 0f),
                 end = Offset(x = offset, y = canvasHeight),
                 color = Color.Black,
-                strokeWidth = 4f
+                strokeWidth = gridStrokeWidth
             )
         }
 

@@ -24,11 +24,20 @@ data class GameStateData(
     var medium: Medium = Medium.Soil,
     var tool: Tool = Tool.None,
     var technologyLevel: TechnologyLevel = TechnologyLevel.Quantum,
+    var autoHarvestEnabled: Boolean = false,
     var milliCounter: Long = 0, // Used for calculating costs
-    var dateMillis: Long = Instant.now().toEpochMilli(),
+    val epochMillis: Long = Instant.now().toEpochMilli(), // Used to determine progression
+    var dateMillis: Long = epochMillis,
     val plantPots: List<PlantPot> = List(area.total) { PlantPot(plant = null) },
     val inventory: List<Pair<PlantType, StockLevel>> = listOf(
         Pair(PlantType.BellPepper, StockLevel(peppers = 5)),
     ),
     val technologies: List<Technology> = emptyList(),
+    val plantTypes: List<PlantType> = listOf(
+        PlantType.BellPepper,
+        PlantType.Poblano,
+        PlantType.Guajillo,
+        PlantType.Jalapeno,
+        PlantType.BirdsEye
+    ),
 )

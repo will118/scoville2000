@@ -37,6 +37,11 @@ fun GameContainer(
         tool = gameState.tool.value,
         technologyLevel = gameState.technologyLevel.value,
         technologies = gameState.technologies,
+        plantTypes = gameState.plantTypes,
+        autoHarvestEnabled = gameState.autoHarvestEnabled.value,
+        autoPlantChecked = { plantType, checked ->
+            gameStateExecutor.enqueueSync(AutoPlantChecked(plantType, checked))
+        },
         onPlantPotTap = { gameStateExecutor.enqueueSync(HarvestOrCompost(it)) },
         sell = { gameStateExecutor.enqueueSync(SellProduce(it)) },
         plantSeed = { gameStateExecutor.enqueueSync(PlantSeed(it)) },
@@ -45,5 +50,6 @@ fun GameContainer(
         upgradeArea = { gameStateExecutor.enqueueSync(UpgradeArea(it)) },
         upgradeTool = { gameStateExecutor.enqueueSync(UpgradeTool(it)) },
         purchaseTechnology = { gameStateExecutor.enqueueSync(PurchaseTechnology(it)) },
+        toggleAutoHarvesting = { gameStateExecutor.enqueueSync(ToggleAutoHarvesting) }
     )
 }
