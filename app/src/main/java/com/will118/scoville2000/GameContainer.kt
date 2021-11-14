@@ -16,6 +16,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 fun GameContainer(
     gameState: GameState,
     gameStateExecutor: GameStateExecutor,
+    navigateToChilliDex: () -> Unit,
     onGameOver: () -> Unit,
 ) {
     LaunchedEffect(key1 = gameState.id, block = {
@@ -43,6 +44,7 @@ fun GameContainer(
         autoPlantChecked = { plantType, checked ->
             gameStateExecutor.enqueueSync(AutoPlantChecked(plantType, checked))
         },
+        navigateToChilliDex = navigateToChilliDex,
         onPlantPotTap = { gameStateExecutor.enqueueSync(HarvestOrCompost(it)) },
         distill = { gameStateExecutor.enqueueSync(Distill(it)) },
         sellDistillate = { gameStateExecutor.enqueueSync(SellDistillate(it)) },

@@ -23,6 +23,7 @@ data class GameStateData(
     var light: Light = Light.Ambient,
     var medium: Medium = Medium.Soil,
     var tool: Tool = Tool.None,
+//    var technologyLevel: TechnologyLevel = TechnologyLevel.None,
     var technologyLevel: TechnologyLevel = TechnologyLevel.Quantum,
     var autoHarvestEnabled: Boolean = false,
     var milliCounter: Long = 0, // Used for calculating costs

@@ -1,11 +1,15 @@
 package com.will118.scoville2000.engine
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Scovilles(val count: Long) {
     override fun toString(): String {
         return "%,d".format(count)
     }
 }
 
+@Serializable
 enum class Distillate(
     val requiredScovilles: Scovilles,
     val priceMultiplier: Long,
@@ -22,7 +26,7 @@ enum class Distillate(
         displayName = "Hot Sauce",
     ),
     QuantumCapsicum(
-        requiredScovilles = Scovilles(25_000_000_000),
+        requiredScovilles = Scovilles(1_000_000_000_000),
         priceMultiplier = 0,
         displayName = "Quantum Capsicum",
     ),

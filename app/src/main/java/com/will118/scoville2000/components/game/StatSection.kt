@@ -7,11 +7,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.will118.scoville2000.components.StatText
 import com.will118.scoville2000.engine.*
 import com.will118.scoville2000.ui.theme.Typography
 import java.time.Instant
@@ -19,17 +16,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-
-@Composable
-private fun StatText(name: String, value: String) {
-    Text(buildAnnotatedString {
-        append("$name:")
-        append(" ")
-        withStyle(style = SpanStyle(fontWeight = FontWeight.SemiBold)) {
-            append(value)
-        }
-    })
-}
 
 @Composable
 fun StatSection(

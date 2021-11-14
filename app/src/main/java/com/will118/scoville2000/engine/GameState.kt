@@ -363,7 +363,7 @@ class GameState(private val data: GameStateData) {
 
     fun distill(distillate: Distillate) {
         val totalScovilles = _pepperInventory.entries
-            .sumOf { it.key.scovilles * it.value.quantity }
+            .sumOf { it.key.scovilles.count * it.value.quantity }
 
         if (totalScovilles < distillate.requiredScovilles.count) {
             return
@@ -374,7 +374,7 @@ class GameState(private val data: GameStateData) {
         loop@for (plantType in _pepperInventory.keys) {
             val stock = _pepperInventory[plantType]!!
             for (consumed in 1..stock.quantity) {
-                requiredScovilles -= plantType.scovilles
+                requiredScovilles -= plantType.scovilles.count
                 if (requiredScovilles <= 0) {
                     _pepperInventory[plantType] = StockLevel(
                         quantity = stock.quantity - consumed

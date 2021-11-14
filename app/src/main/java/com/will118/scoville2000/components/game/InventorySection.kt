@@ -11,6 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.will118.scoville2000.components.Table
+import com.will118.scoville2000.components.TableCellText
+import com.will118.scoville2000.components.TableColumn
 import com.will118.scoville2000.engine.Distillate
 import com.will118.scoville2000.engine.PlantType
 import com.will118.scoville2000.engine.StockLevel

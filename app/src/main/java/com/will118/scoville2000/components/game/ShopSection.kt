@@ -4,11 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.Icon
-import androidx.compose.material.IconToggleButton
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,29 +15,33 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.will118.scoville2000.components.Table
+import com.will118.scoville2000.components.TableCellText
+import com.will118.scoville2000.components.TableColumn
 import com.will118.scoville2000.engine.*
 import com.will118.scoville2000.ui.theme.Typography
 
 @Composable
 private fun SeedTable(
     currentPlantTypes: SnapshotStateList<PlantType>,
-    currentTechnologies: SnapshotStateList<Technology>,
+    hasAutoPlanter: Boolean,
     plantSeed: (Seed) -> Unit,
     autoPlantChecked: (PlantType, Boolean) -> Unit,
 ) {
-    Text(text = "Seeds", style = Typography.subtitle2)
-    Spacer(modifier = Modifier.height(5.dp))
-
-    val hasAutoPlanter = currentTechnologies.contains(Technology.AutoPlanter)
-
     Table(
-        columns = listOfNotNull(
+        columns = listOf(
             TableColumn(header = null),
             TableColumn(header = null),
-            TableColumn(header = null),
-            if (hasAutoPlanter) TableColumn(header = null, weight = 0.5f) else null,
-        ),
-        items = currentPlantTypes.asSequence(),
+        ) +
+        if (hasAutoPlanter)
+            listOf(
+                TableColumn(header = null),
+                TableColumn(header = null, weight = 0.5f)
+            )
+        else
+            listOf(TableColumn(header = null, weight = 0.75f)
+    ),
+    items = currentPlantTypes.asSequence(),
         renderItem = { column, item ->
             when (column.index) {
                 0 -> TableCellText(text = item.displayName)
@@ -64,8 +67,6 @@ private fun SeedTable(
             }
         },
     )
-
-    Spacer(modifier = Modifier.height(10.dp))
 }
 
 @Composable
@@ -77,6 +78,7 @@ fun ShopSection(
     currentTechnologies: SnapshotStateList<Technology>,
     currentPlantTypes: SnapshotStateList<PlantType>,
     autoPlantChecked: (PlantType, Boolean) -> Unit,
+    navigateToChilliDex: () -> Unit,
     plantSeed: (Seed) -> Unit,
     upgradeLight: (Light) -> Unit,
     upgradeMedium: (Medium) -> Unit,
@@ -109,12 +111,31 @@ fun ShopSection(
     Column {
         Text(text = "Shop", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
-        SeedTable(
-            currentPlantTypes = currentPlantTypes,
-            currentTechnologies = currentTechnologies,
-            plantSeed = plantSeed,
-            autoPlantChecked = autoPlantChecked,
-        )
+
+        Text(text = "Seeds", style = Typography.subtitle2)
+        Spacer(modifier = Modifier.height(5.dp))
+        if (currentTechnologies.contains(Technology.ChimoleonGenetics)) {
+            Button(
+                onClick = { navigateToChilliDex() },
+            ) {
+                Icon(
+                    Icons.Filled.ExitToApp,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text("ChilliDEX")
+            }
+        } else {
+            val hasAutoPlanter = currentTechnologies.contains(Technology.AutoPlanter)
+            SeedTable(
+                hasAutoPlanter = hasAutoPlanter,
+                currentPlantTypes = currentPlantTypes,
+                plantSeed = plantSeed,
+                autoPlantChecked = autoPlantChecked,
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         product(
             header = "Lights",
             products = currentLight.upgrades,

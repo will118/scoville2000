@@ -7,7 +7,7 @@ import java.time.Instant
 @Serializable
 data class PlantType(
     override val displayName: String,
-    val scovilles: Long,
+    val scovilles: Scovilles,
     val phases: Phases,
     override val cost: Currency?, // For seeds
     val autoPlantChecked: Boolean = false,
@@ -15,31 +15,31 @@ data class PlantType(
     companion object {
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
-            scovilles = 0,
+            scovilles = Scovilles(0),
             phases = Phases.DEFAULT,
             cost = Currency(2),
         )
         val Poblano = PlantType(
             displayName = "Poblano",
-            scovilles = 2_000,
+            scovilles = Scovilles(2_000),
             phases = Phases.DEFAULT,
             cost = Currency(20),
         )
         val Guajillo = PlantType(
             displayName = "Guajillo",
-            scovilles = 3_000,
+            scovilles = Scovilles(3_000),
             phases = Phases.DEFAULT,
             cost = Currency(50),
         )
         val Jalapeno = PlantType(
             displayName = "Jalapeño",
-            scovilles = 6_000,
+            scovilles = Scovilles(6_000),
             phases = Phases.DEFAULT,
             cost = Currency(100),
         )
         val BirdsEye = PlantType(
             displayName = "Bird's Eye",
-            scovilles = 75_000,
+            scovilles = Scovilles(75_000),
             phases = Phases.DEFAULT,
             cost = Currency(200),
         )

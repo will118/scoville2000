@@ -20,7 +20,7 @@ enum class Buyer(
 //    Exchange(pricePerScoville = )
 
     fun total(plantType: PlantType, quantity: Long) =
-        2.plus(max(plantType.scovilles / 1000, 1) * pricePerScoville.total) * quantity
+        2.plus(max(plantType.scovilles.count / 1000, 1) * pricePerScoville.total) * quantity
 
     fun total(distillate: Distillate, quantity: Long) =
         (distillate.requiredScovilles.count / 1000 * pricePerScoville.total) * quantity * distillate.priceMultiplier

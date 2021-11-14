@@ -33,6 +33,7 @@ fun Game(
     technologies: SnapshotStateList<Technology>,
     plantTypes: SnapshotStateList<PlantType>,
     autoPlantChecked: (PlantType, Boolean) -> Unit,
+    navigateToChilliDex: () -> Unit,
     onPlantPotTap: (PlantPot) -> Unit,
     sellDistillate: (Distillate) -> Unit,
     sellPeppers: (PlantType) -> Unit,
@@ -88,6 +89,7 @@ fun Game(
             currentTool = tool,
             currentTechnologies = technologies,
             currentPlantTypes = plantTypes,
+            navigateToChilliDex = navigateToChilliDex,
             plantSeed = plantSeed,
             autoPlantChecked = autoPlantChecked,
             upgradeLight = upgradeLight,
@@ -113,6 +115,10 @@ fun Game(
             DistillerySection(
                 distill = distill
             )
+        }
+        if (technologies.contains(Technology.ChimoleonGenetics)) {
+            Divider(modifier = dividerPadding)
+            GeneticsSection()
         }
         Spacer(modifier = Modifier.height(15.dp))
     }

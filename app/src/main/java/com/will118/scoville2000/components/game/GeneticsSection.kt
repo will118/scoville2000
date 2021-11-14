@@ -15,11 +15,9 @@ import com.will118.scoville2000.engine.Distillate
 import com.will118.scoville2000.ui.theme.Typography
 
 @Composable
-fun DistillerySection(
-    distill: (Distillate) -> Unit
-) {
+fun GeneticsSection() {
     Column {
-        Text(text = "Distillery", style = Typography.h5)
+        Text(text = "Genetics", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
         Table(
             columns = listOf(
@@ -32,7 +30,7 @@ fun DistillerySection(
                 when (column.index) {
                     0 -> TableCellText(text = item.displayName)
                     1 -> TableCellText(text = item.requiredScovilles.toString())
-                    2 -> TextButton(onClick = { distill(item) }) {
+                    2 -> TextButton(onClick = { }) {
                         Text(
                             text = "Distill",
                         )
