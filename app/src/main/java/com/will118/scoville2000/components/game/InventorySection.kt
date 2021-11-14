@@ -49,7 +49,7 @@ fun InventorySection(
         )
 
         val distillates = distillateInventory
-            .filter { it.value.quantity > 0 }
+            .filter { it.value.quantity > 0 && it.key != Distillate.QuantumCapsicum }
 
         if (distillates.isNotEmpty()) {
             Spacer(modifier = Modifier.height(10.dp))

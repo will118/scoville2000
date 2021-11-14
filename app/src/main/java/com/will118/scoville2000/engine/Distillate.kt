@@ -4,9 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Scovilles(val count: Long) {
-    override fun toString(): String {
-        return "%,d".format(count)
-    }
+    override fun toString() = fmtLong(count)
 }
 
 @Serializable

@@ -12,7 +12,9 @@ import kotlinx.serialization.Serializable
 import java.time.Duration
 
 @Serializable
-data class StockLevel(val quantity: Long)
+data class StockLevel(val quantity: Long) {
+    override fun toString() = fmtLong(quantity)
+}
 
 fun MutableList<() -> Boolean>.tryPopFirst() {
     firstOrNull()?.let {
@@ -60,16 +62,16 @@ class GameState(private val data: GameStateData) {
             millisElapsed =  12 * MILLIS_PER_MONTH,
             condition = { true },
         ),
-//        techProgression(
-//            targetLevel = TechnologyLevel.Advanced,
-//            millisElapsed =  5 * 12 * MILLIS_PER_MONTH,
-//            condition = { true },
-//        ),
-//        techProgression(
-//            targetLevel = TechnologyLevel.Quantum,
-//            millisElapsed =  10 * 12 * MILLIS_PER_MONTH,
-//            condition = { true },
-//        ),
+        techProgression(
+            targetLevel = TechnologyLevel.Advanced,
+            millisElapsed =  5 * 12 * MILLIS_PER_MONTH,
+            condition = { true },
+        ),
+        techProgression(
+            targetLevel = TechnologyLevel.Quantum,
+            millisElapsed =  10 * 12 * MILLIS_PER_MONTH,
+            condition = { true },
+        ),
     )
 
     private fun plantTypeProgression(

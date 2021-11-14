@@ -113,12 +113,14 @@ fun Game(
         if (technologies.contains(Technology.ScovilleDistillery)) {
             Divider(modifier = dividerPadding)
             DistillerySection(
-                distill = distill
+                distill = distill,
             )
         }
         if (technologies.contains(Technology.ChimoleonGenetics)) {
             Divider(modifier = dividerPadding)
-            GeneticsSection()
+            GeneticsSection(
+                distillateInventory = distillateInventory,
+            )
         }
         Spacer(modifier = Modifier.height(15.dp))
     }
