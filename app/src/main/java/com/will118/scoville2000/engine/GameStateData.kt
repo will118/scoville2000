@@ -33,9 +33,16 @@ data class GameStateData(
     val pepperInventory: List<Pair<PlantType, StockLevel>> = listOf(
         Pair(PlantType.BellPepper, StockLevel(quantity = 5)),
     ),
-    val distillateInventory: List<Pair<Distillate, StockLevel>> = emptyList(),
+    val distillateInventory: List<Pair<Distillate, FractionalStockLevel>> = emptyList(),
     val technologies: List<Technology> = emptyList(),
     val plantTypes: List<PlantType> = listOf(
         PlantType.BellPepper,
+    ),
+    val geneticComputationState: GeneticComputationState = GeneticComputationState(
+        leftPlantType = PlantType.BellPepper,
+        rightPlantType = PlantType.BellPepper,
+        isActive = false,
+        population = emptyList(),
+        fitnessFunction = FitnessFunction(),
     )
 )

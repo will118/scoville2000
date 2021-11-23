@@ -4,11 +4,13 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import com.will118.scoville2000.components.game.Game
 import com.will118.scoville2000.engine.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@ExperimentalComposeUiApi
 @ExperimentalCoroutinesApi
 @ExperimentalFoundationApi
 @ExperimentalGraphicsApi
@@ -40,6 +42,7 @@ fun GameContainer(
         technologyLevel = gameState.technologyLevel.value,
         technologies = gameState.technologies,
         plantTypes = gameState.plantTypes,
+        geneticComputationState = gameState.geneticComputationState.value,
         autoHarvestEnabled = gameState.autoHarvestEnabled.value,
         autoPlantChecked = { plantType, checked ->
             gameStateExecutor.enqueueSync(AutoPlantChecked(plantType, checked))
@@ -49,11 +52,16 @@ fun GameContainer(
         distill = { gameStateExecutor.enqueueSync(Distill(it)) },
         sellDistillate = { gameStateExecutor.enqueueSync(SellDistillate(it)) },
         sellPeppers = { gameStateExecutor.enqueueSync(SellPeppers(it)) },
+        setLeftGeneticsPlantType = { gameStateExecutor.enqueueSync(SetLeftGeneticCross(it)) },
+        setRightGeneticsPlantType = { gameStateExecutor.enqueueSync(SetRightGeneticCross(it)) },
         plantSeed = { gameStateExecutor.enqueueSync(PlantSeed(it)) },
         upgradeLight = { gameStateExecutor.enqueueSync(UpgradeLight(it)) },
         upgradeMedium = { gameStateExecutor.enqueueSync(UpgradeMedium(it)) },
         upgradeArea = { gameStateExecutor.enqueueSync(UpgradeArea(it)) },
         upgradeTool = { gameStateExecutor.enqueueSync(UpgradeTool(it)) },
+        updateFitnessSlider = { trait, value ->
+            gameStateExecutor.enqueueSync(SetFitnessSlider(trait, value))
+        },
         purchaseTechnology = { gameStateExecutor.enqueueSync(PurchaseTechnology(it)) },
         toggleAutoHarvesting = { gameStateExecutor.enqueueSync(ToggleAutoHarvesting) }
     )

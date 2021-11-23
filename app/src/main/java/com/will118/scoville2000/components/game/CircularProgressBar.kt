@@ -1,5 +1,6 @@
 package com.will118.scoville2000.components.game
 
+import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -8,13 +9,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun CircularProgressBar(
+    centerText: String,
     modifier: Modifier = Modifier,
     progress: Float = 0f,
     progressMax: Float = 100f,
@@ -26,10 +31,16 @@ fun CircularProgressBar(
     startAngle: Float = 0f
 ) {
     // Based on: https://github.com/hitanshu-dhawan/CircularProgressBar-Compose
+    val paint = Paint().asFrameworkPaint()
+    paint.apply {
+        isAntiAlias = true
+        textSize = 64f
+        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        textAlign = android.graphics.Paint.Align.CENTER
+    }
+
     Canvas(modifier = modifier.fillMaxSize()) {
-
         val canvasSize = size.minDimension
-
         val radius = canvasSize / 2 - maxOf(backgroundProgressBarWidth, progressBarWidth).toPx() / 2
 
         drawCircle(
@@ -51,5 +62,14 @@ fun CircularProgressBar(
                 cap = if (roundBorder) StrokeCap.Round else StrokeCap.Butt
             )
         )
+
+        drawIntoCanvas {
+            it.nativeCanvas.drawText(
+                centerText,
+                size.center.x,
+                size.center.y - ((paint.descent() + paint.ascent()) / 2),
+                paint,
+            )
+        }
     }
 }

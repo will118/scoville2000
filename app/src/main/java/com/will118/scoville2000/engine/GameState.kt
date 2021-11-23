@@ -16,6 +16,13 @@ data class StockLevel(val quantity: Long) {
     override fun toString() = fmtLong(quantity)
 }
 
+@Serializable
+data class FractionalStockLevel(val quantity: Long, val thousandths: Int) {
+    override fun toString(): String {
+        return "${quantity}.${thousandths}"
+    }
+}
+
 fun MutableList<() -> Boolean>.tryPopFirst() {
     firstOrNull()?.let {
         if (it()) {
@@ -121,7 +128,7 @@ class GameState(private val data: GameStateData) {
     val pepperInventory: SnapshotStateMap<PlantType, StockLevel> by ::_pepperInventory
 
     private val _distillateInventory = data.distillateInventory.toMutableStateMap()
-    val distillateInventory: SnapshotStateMap<Distillate, StockLevel> by ::_distillateInventory
+    val distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel> by ::_distillateInventory
 
     private val _area = mutableStateOf(data.area)
     val area: State<Area> by ::_area
@@ -154,6 +161,9 @@ class GameState(private val data: GameStateData) {
     // before it is snapshot.
     private val _dateMillis = MutableLiveData(data.dateMillis)
     val dateMillis: LiveData<Long> by ::_dateMillis
+
+    private val _geneticComputationState = mutableStateOf(data.geneticComputationState)
+    val geneticComputationState: State<GeneticComputationState> by ::_geneticComputationState
 
     var buyer = Buyer.Friends
         private set
@@ -278,7 +288,7 @@ class GameState(private val data: GameStateData) {
 
     fun sellDistillate(distillate: Distillate) {
         _distillateInventory[distillate]?.let {
-            _distillateInventory[distillate] = StockLevel(quantity = 0)
+            _distillateInventory[distillate] = it.copy(quantity = 0)
             data.balance = data.balance.copy(
                 total = data.balance.total
                     .plus(buyer.total(distillate = distillate, quantity = it.quantity))
@@ -349,6 +359,19 @@ class GameState(private val data: GameStateData) {
         }
     }
 
+    // Have to ensure the UI blocks changing this while isActive
+    fun setLeftGeneticsPlantType(plantType: PlantType) {
+        _geneticComputationState.value = _geneticComputationState.value.copy(
+            leftPlantType = plantType
+        )
+    }
+    // Have to ensure the UI blocks changing this while isActive
+    fun setRightGeneticsPlantType(plantType: PlantType) {
+        _geneticComputationState.value = _geneticComputationState.value.copy(
+            rightPlantType = plantType
+        )
+    }
+
     fun plantSeed(seed: Seed) {
         val index = _plantPots.indexOfFirst { it.plant == null }
         if (index >= 0 && deductPurchaseCost(seed.plantType)) {
@@ -389,7 +412,7 @@ class GameState(private val data: GameStateData) {
 
         _distillateInventory.compute(distillate) { _, stock ->
             stock?.copy(quantity = stock.quantity + 1)
-                ?: StockLevel(quantity = 1)
+                ?: FractionalStockLevel(quantity = 1, thousandths = 0)
         }
     }
 
@@ -397,6 +420,16 @@ class GameState(private val data: GameStateData) {
         val newState = !data.autoHarvestEnabled
         data.autoHarvestEnabled = newState
         _autoHarvestEnabled.value = newState
+    }
+
+    fun updateFitnessSliders(trait: GeneticTrait, value: Float) {
+        _geneticComputationState.value = _geneticComputationState.value.copy(
+            fitnessFunction = _geneticComputationState.value.fitnessFunction.setValue(
+                trait = trait,
+                newValue = value,
+            )
+        )
+        println("${_geneticComputationState.value.fitnessFunction}")
     }
 
     private fun calculateCosts(): Long {
@@ -408,6 +441,10 @@ class GameState(private val data: GameStateData) {
          .times(
              _plantPots.count { it.plant?.isGrowing(data.dateMillis) == true }
          )
+    }
+
+    private fun runGenetics() {
+//        _geneticComputationState.value.
     }
 
     fun onTick(): Boolean {
@@ -458,6 +495,36 @@ class GameState(private val data: GameStateData) {
 
 //            progressionStack.tryPopFirst()
             plantTypeStack.tryPopFirst()
+
+            if (geneticComputationState.value.isActive) {
+                val qcapCostThousandths = 100
+
+                val quantumCaps = distillateInventory.getOrDefault(
+                    Distillate.QuantumCapsicum,
+                    FractionalStockLevel(quantity = 0, thousandths = 0),
+                )
+
+                when {
+                    quantumCaps.thousandths > qcapCostThousandths -> {
+                        _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                            thousandths = quantumCaps.thousandths - qcapCostThousandths
+                        )
+                        runGenetics()
+                    }
+                    quantumCaps.quantity > 0 -> {
+                        _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                            quantity = quantumCaps.quantity - 1,
+                            thousandths = quantumCaps.thousandths + 1000 - qcapCostThousandths,
+                        )
+                        runGenetics()
+                    }
+                    else -> {
+                        _geneticComputationState.value = _geneticComputationState.value.copy(
+                            isActive = false
+                        )
+                    }
+                }
+            }
         }
 
         return false
@@ -469,5 +536,6 @@ class GameState(private val data: GameStateData) {
         distillateInventory = _distillateInventory.toList(),
         technologies = _technologies.toList(),
         plantTypes = _plantTypes.toList(),
+        geneticComputationState = _geneticComputationState.value,
     )
 }

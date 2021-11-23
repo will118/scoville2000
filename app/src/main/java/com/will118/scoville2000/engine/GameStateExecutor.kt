@@ -13,6 +13,8 @@ sealed interface GameOperation
 object Tick : GameOperation
 object Save : GameOperation
 data class SellPeppers(val plantType: PlantType) : GameOperation
+data class SetLeftGeneticCross(val plantType: PlantType) : GameOperation
+data class SetRightGeneticCross(val plantType: PlantType) : GameOperation
 data class SellDistillate(val distillate: Distillate) : GameOperation
 object ToggleAutoHarvesting : GameOperation
 data class HarvestOrCompost(val plantPot: PlantPot) : GameOperation
@@ -24,6 +26,7 @@ data class UpgradeArea(val area: Area) : GameOperation
 data class UpgradeTool(val tool: Tool) : GameOperation
 data class Distill(val distillate: Distillate) : GameOperation
 data class PurchaseTechnology(val technology: Technology) : GameOperation
+data class SetFitnessSlider(val trait: GeneticTrait, val newValue: Float) : GameOperation
 
 @ExperimentalCoroutinesApi
 class GameStateExecutor(
@@ -57,6 +60,9 @@ class GameStateExecutor(
             is AutoPlantChecked -> gameState.autoPlantChecked(operation.plantType, operation.checked)
             is ToggleAutoHarvesting -> gameState.toggleAutoHarvesting()
             is Distill -> gameState.distill(operation.distillate)
+            is SetLeftGeneticCross -> gameState.setLeftGeneticsPlantType(operation.plantType)
+            is SetRightGeneticCross -> gameState.setRightGeneticsPlantType(operation.plantType)
+            is SetFitnessSlider -> gameState.updateFitnessSliders(operation.trait, operation.newValue)
         }
 
         return true

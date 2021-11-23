@@ -3,47 +3,81 @@ package com.will118.scoville2000.engine
 import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.pow
 
 @Serializable
 data class PlantType(
     override val displayName: String,
-    val scovilles: Scovilles,
     val phases: Phases,
+    val chromosome: Chromosome,
     override val cost: Currency?, // For seeds
     val autoPlantChecked: Boolean = false,
 ): Describe, Purchasable {
     companion object {
+        // TODO: would be nice to derive from code
+        const val TOTAL_PEPPER_TYPES = 99
+
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
-            scovilles = Scovilles(0),
+//            scovilles = Scovilles(0),
             phases = Phases.DEFAULT,
+            chromosome = Chromosome(
+                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+            ),
             cost = Currency(2),
         )
         val Poblano = PlantType(
             displayName = "Poblano",
-            scovilles = Scovilles(2_000),
+            chromosome = Chromosome(
+                scovilleCount = Gene(lsb = flipBits(1), msb = flipBits(1)),
+                pepperYield = Gene(lsb = flipBits(2), msb = flipBits(1)),
+            ),
             phases = Phases.DEFAULT,
             cost = Currency(20),
         )
         val Guajillo = PlantType(
             displayName = "Guajillo",
-            scovilles = Scovilles(3_000),
+            chromosome = Chromosome(
+                scovilleCount = Gene(lsb = flipBits(2), msb = flipBits(1)),
+                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+            ),
             phases = Phases.DEFAULT,
             cost = Currency(50),
         )
         val Jalapeno = PlantType(
             displayName = "Jalapeño",
-            scovilles = Scovilles(6_000),
+            chromosome = Chromosome(
+                scovilleCount = Gene(lsb = flipBits(2), msb = flipBits(2)),
+                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+            ),
             phases = Phases.DEFAULT,
             cost = Currency(100),
         )
         val BirdsEye = PlantType(
             displayName = "Bird's Eye",
-            scovilles = Scovilles(75_000),
+            chromosome = Chromosome(
+                scovilleCount = Gene(lsb = flipBits(4), msb = flipBits(4)),
+                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+            ),
             phases = Phases.DEFAULT,
             cost = Currency(200),
         )
     }
+
+    val yield: Long
+        get() {
+            return chromosome.pepperYield.popCount() * 10L
+        }
+
+    val scovilles: Scovilles
+        get() {
+            val popCount = chromosome.scovilleCount.popCount()
+            return Scovilles(
+                popCount.toDouble()
+                    .pow(2)
+                    .toLong()
+                    .times(1000))
+        }
 
     fun toSeed() = Seed(this)
 

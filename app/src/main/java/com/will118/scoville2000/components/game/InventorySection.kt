@@ -15,6 +15,7 @@ import com.will118.scoville2000.components.Table
 import com.will118.scoville2000.components.TableCellText
 import com.will118.scoville2000.components.TableColumn
 import com.will118.scoville2000.engine.Distillate
+import com.will118.scoville2000.engine.FractionalStockLevel
 import com.will118.scoville2000.engine.PlantType
 import com.will118.scoville2000.engine.StockLevel
 import com.will118.scoville2000.ui.theme.Typography
@@ -22,7 +23,7 @@ import com.will118.scoville2000.ui.theme.Typography
 @ExperimentalFoundationApi
 @Composable
 fun InventorySection(
-    distillateInventory: SnapshotStateMap<Distillate, StockLevel>,
+    distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel>,
     pepperInventory: SnapshotStateMap<PlantType, StockLevel>,
     sellDistillate: (Distillate) -> Unit,
     sellPeppers: (PlantType) -> Unit,

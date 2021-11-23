@@ -8,12 +8,14 @@ import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.compose.ui.unit.dp
 import com.will118.scoville2000.engine.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@ExperimentalComposeUiApi
 @ExperimentalGraphicsApi
 @ExperimentalCoroutinesApi
 @ExperimentalFoundationApi
@@ -28,20 +30,24 @@ fun Game(
     tool: Tool,
     technologyLevel: TechnologyLevel,
     plantPots: SnapshotStateList<PlantPot>,
-    distillateInventory: SnapshotStateMap<Distillate, StockLevel>,
+    distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel>,
     pepperInventory: SnapshotStateMap<PlantType, StockLevel>,
     technologies: SnapshotStateList<Technology>,
     plantTypes: SnapshotStateList<PlantType>,
+    geneticComputationState: GeneticComputationState,
     autoPlantChecked: (PlantType, Boolean) -> Unit,
     navigateToChilliDex: () -> Unit,
     onPlantPotTap: (PlantPot) -> Unit,
     sellDistillate: (Distillate) -> Unit,
     sellPeppers: (PlantType) -> Unit,
+    setLeftGeneticsPlantType: (PlantType) -> Unit,
+    setRightGeneticsPlantType: (PlantType) -> Unit,
     distill: (Distillate) -> Unit,
     upgradeArea: (Area) -> Unit,
     upgradeMedium: (Medium) -> Unit,
     upgradeLight: (Light) -> Unit,
     upgradeTool: (Tool) -> Unit,
+    updateFitnessSlider: (GeneticTrait, Float) -> Unit,
     plantSeed: (Seed) -> Unit,
     purchaseTechnology: (Technology) -> Unit,
     autoHarvestEnabled: Boolean,
@@ -119,7 +125,12 @@ fun Game(
         if (technologies.contains(Technology.ChimoleonGenetics)) {
             Divider(modifier = dividerPadding)
             GeneticsSection(
+                geneticComputationState = geneticComputationState,
+                setLeftPlantType = setLeftGeneticsPlantType,
+                setRightPlantType = setRightGeneticsPlantType,
                 distillateInventory = distillateInventory,
+                plantTypes = plantTypes,
+                updateFitnessSlider = updateFitnessSlider,
             )
         }
         Spacer(modifier = Modifier.height(15.dp))
