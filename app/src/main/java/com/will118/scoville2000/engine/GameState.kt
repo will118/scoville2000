@@ -422,9 +422,14 @@ class GameState(private val data: GameStateData) {
         _autoHarvestEnabled.value = newState
     }
 
+    fun toggleComputation() {
+        val newState = !_geneticComputationState.value.isActive
+        _geneticComputationState.value = _geneticComputationState.value.copy(isActive = newState)
+    }
+
     fun updateFitnessSliders(trait: GeneticTrait, value: Float) {
         _geneticComputationState.value = _geneticComputationState.value.copy(
-            fitnessFunction = _geneticComputationState.value.fitnessFunction.setValue(
+            fitnessFunctionData = _geneticComputationState.value.fitnessFunctionData.setValue(
                 trait = trait,
                 newValue = value,
             )
@@ -443,7 +448,39 @@ class GameState(private val data: GameStateData) {
     }
 
     private fun runGenetics() {
-//        _geneticComputationState.value.
+        _geneticComputationState.value.tickGenerations(1)
+    }
+
+    private fun maybeRunGenetics() {
+        if (!_geneticComputationState.value.isActive) return
+
+        val qcapCostThousandths = 100
+
+        val quantumCaps = _distillateInventory.getOrDefault(
+            Distillate.QuantumCapsicum,
+            FractionalStockLevel(quantity = 0, thousandths = 0),
+        )
+
+        when {
+            quantumCaps.thousandths > qcapCostThousandths -> {
+                _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                    thousandths = quantumCaps.thousandths - qcapCostThousandths
+                )
+                runGenetics()
+            }
+            quantumCaps.quantity > 0 -> {
+                _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                    quantity = quantumCaps.quantity - 1,
+                    thousandths = quantumCaps.thousandths + 1000 - qcapCostThousandths,
+                )
+                runGenetics()
+            }
+            else -> {
+                _geneticComputationState.value = _geneticComputationState.value.copy(
+                    isActive = false
+                )
+            }
+        }
     }
 
     fun onTick(): Boolean {
@@ -495,35 +532,7 @@ class GameState(private val data: GameStateData) {
 //            progressionStack.tryPopFirst()
             plantTypeStack.tryPopFirst()
 
-            if (geneticComputationState.value.isActive) {
-                val qcapCostThousandths = 100
-
-                val quantumCaps = distillateInventory.getOrDefault(
-                    Distillate.QuantumCapsicum,
-                    FractionalStockLevel(quantity = 0, thousandths = 0),
-                )
-
-                when {
-                    quantumCaps.thousandths > qcapCostThousandths -> {
-                        _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
-                            thousandths = quantumCaps.thousandths - qcapCostThousandths
-                        )
-                        runGenetics()
-                    }
-                    quantumCaps.quantity > 0 -> {
-                        _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
-                            quantity = quantumCaps.quantity - 1,
-                            thousandths = quantumCaps.thousandths + 1000 - qcapCostThousandths,
-                        )
-                        runGenetics()
-                    }
-                    else -> {
-                        _geneticComputationState.value = _geneticComputationState.value.copy(
-                            isActive = false
-                        )
-                    }
-                }
-            }
+            maybeRunGenetics()
         }
 
         return false
@@ -535,6 +544,8 @@ class GameState(private val data: GameStateData) {
         distillateInventory = _distillateInventory.toList(),
         technologies = _technologies.toList(),
         plantTypes = _plantTypes.toList(),
-        geneticComputationState = _geneticComputationState.value,
+        geneticComputationState = _geneticComputationState.value.copy(
+            serializedPopulation = _geneticComputationState.value.population.toList()
+        ),
     )
 }

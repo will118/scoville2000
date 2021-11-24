@@ -42,7 +42,8 @@ data class GameStateData(
         leftPlantType = PlantType.BellPepper,
         rightPlantType = PlantType.BellPepper,
         isActive = false,
-        population = emptyList(),
-        fitnessFunction = FitnessFunction(),
+        fitnessFunctionData = FitnessFunctionData(),
+        generation = 0,
+        serializedPopulation = emptyList(),
     )
 )

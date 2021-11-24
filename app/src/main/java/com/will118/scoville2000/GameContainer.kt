@@ -63,6 +63,7 @@ fun GameContainer(
             gameStateExecutor.enqueueSync(SetFitnessSlider(trait, value))
         },
         purchaseTechnology = { gameStateExecutor.enqueueSync(PurchaseTechnology(it)) },
-        toggleAutoHarvesting = { gameStateExecutor.enqueueSync(ToggleAutoHarvesting) }
+        toggleAutoHarvesting = { gameStateExecutor.enqueueSync(ToggleAutoHarvesting) },
+        toggleComputation = { gameStateExecutor.enqueueSync(ToggleComputation) },
     )
 }

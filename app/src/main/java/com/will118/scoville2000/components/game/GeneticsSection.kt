@@ -27,6 +27,7 @@ fun GeneticsSection(
     distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel>,
     plantTypes: SnapshotStateList<PlantType>,
     updateFitnessSlider: (GeneticTrait, Float) -> Unit,
+    toggleComputation: () -> Unit,
 ) {
     val quantumCaps = distillateInventory.getOrDefault(
         Distillate.QuantumCapsicum,
@@ -126,21 +127,35 @@ fun GeneticsSection(
         Spacer(modifier = Modifier.height(10.dp))
 
         GeneticFitnessSliders(
-            fitnessFunction = geneticComputationState.fitnessFunction,
+            fitnessFunction = geneticComputationState.fitnessFunctionData,
             updateFitnessSlider = updateFitnessSlider,
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Button(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            onClick = toggleComputation,
+//            colors = ButtonDefaults.buttonColors(
+//                backgroundColor = Color.White,
+//                contentColor = Color.Red),
+        ) {
+            Text(
+                text = if (geneticComputationState.isActive) "PAUSE" else "START",
+            )
+        }
     }
 }
 
 @ExperimentalComposeUiApi
 @Composable
 fun GeneticFitnessSliders(
-    fitnessFunction: FitnessFunction,
+    fitnessFunction: FitnessFunctionData,
     updateFitnessSlider: (GeneticTrait, Float) -> Unit
 ) {
     Row {
         Column {
-            for (trait in FitnessFunction.TRAITS) {
+            for (trait in GeneticTrait.values()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = trait.displayName,

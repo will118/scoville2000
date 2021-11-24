@@ -52,6 +52,7 @@ fun Game(
     purchaseTechnology: (Technology) -> Unit,
     autoHarvestEnabled: Boolean,
     toggleAutoHarvesting: () -> Unit,
+    toggleComputation: () -> Unit,
 ) {
     val dividerPadding = Modifier.padding(vertical = 15.dp)
 
@@ -131,6 +132,7 @@ fun Game(
                 distillateInventory = distillateInventory,
                 plantTypes = plantTypes,
                 updateFitnessSlider = updateFitnessSlider,
+                toggleComputation = toggleComputation,
             )
         }
         Spacer(modifier = Modifier.height(15.dp))

@@ -19,7 +19,6 @@ data class PlantType(
 
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
-//            scovilles = Scovilles(0),
             phases = Phases.DEFAULT,
             chromosome = Chromosome(
                 pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),

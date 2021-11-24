@@ -1,6 +1,7 @@
 package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 @Serializable
 enum class GeneticTrait(override val displayName: String) : Describe {
@@ -32,20 +33,24 @@ data class Chromosome(
     val pepperSize: Gene = emptyGene,
     val growthDuration: Gene = emptyGene,
 ) {
-    fun fitness(goals: Map<GeneticTrait, Float>): Float {
-        return goals.entries.fold(0f) { acc, entry ->
-            acc + when (entry.key) {
-                GeneticTrait.PepperYield -> pepperYield
-                GeneticTrait.ScovilleCount -> scovilleCount
-                GeneticTrait.PepperSize -> pepperSize
-                GeneticTrait.GrowthDuration -> growthDuration
-            }.popCount().times(entry.value)
+    fun fitness(fitnessFunction: FitnessFunctionData): Float {
+        return GeneticTrait.values().fold(0f) { acc, trait ->
+            acc + when (trait) {
+                GeneticTrait.PepperYield ->
+                    pepperYield.popCount().times(fitnessFunction.pepperYield)
+                GeneticTrait.ScovilleCount ->
+                    scovilleCount.popCount().times(fitnessFunction.scovilleCount)
+                GeneticTrait.PepperSize ->
+                    pepperSize.popCount().times(fitnessFunction.pepperSize)
+                GeneticTrait.GrowthDuration ->
+                    growthDuration.popCount().times(fitnessFunction.growthDuration)
+            }
         }
     }
 }
 
 @Serializable
-data class FitnessFunction(
+data class FitnessFunctionData(
     val pepperYield: Float = 0.25f,
     val scovilleCount: Float = 0.25f,
     val pepperSize: Float = 0.25f,
@@ -54,12 +59,6 @@ data class FitnessFunction(
     companion object {
         const val MAX = 1.0f
         const val VALUES = 4
-        val TRAITS = listOf(
-            GeneticTrait.PepperYield,
-            GeneticTrait.ScovilleCount,
-            GeneticTrait.PepperSize,
-            GeneticTrait.GrowthDuration,
-        )
     }
 
     fun getValue(trait: GeneticTrait): Float {
@@ -71,10 +70,10 @@ data class FitnessFunction(
         }
     }
 
-    fun setValue(trait: GeneticTrait, newValue: Float): FitnessFunction {
+    fun setValue(trait: GeneticTrait, newValue: Float): FitnessFunctionData {
         val unchangedNewPortion = 1.0f - newValue
 
-        var sumUnchanged = TRAITS.fold(0.0f) { acc, t ->
+        var sumUnchanged = GeneticTrait.values().fold(0.0f) { acc, t ->
             when (t) {
                 trait -> acc
                 GeneticTrait.PepperYield -> acc + pepperYield
@@ -96,7 +95,7 @@ data class FitnessFunction(
             } * unchangedNewPortion
         }
 
-        for (t in TRAITS) {
+        for (t in GeneticTrait.values()) {
             val isTarget = t == trait
 
             when (t) {
@@ -129,6 +128,36 @@ data class GeneticComputationState(
     val leftPlantType: PlantType,
     val rightPlantType: PlantType,
     val isActive: Boolean,
-    val population: List<PlantType>,
-    val fitnessFunction: FitnessFunction,
-)
+    val generation: Int,
+    val fitnessFunctionData: FitnessFunctionData,
+    private val serializedPopulation: List<PlantType>,
+) {
+    private companion object {
+        const val REQUIRED_FITNESS_IMPROVEMENT_PERCENTAGE = 10.0f
+    }
+
+    @Transient
+    val population = serializedPopulation.toSortedSet(compareBy { it.chromosome.fitness(fitnessFunctionData) })
+
+    fun tickGenerations(n: Int): GeneticComputationState {
+        var newGeneration = generation
+
+        for (i in 0 until n) {
+            newGeneration++
+
+            // selection
+            val top2 = population.take(2)
+        }
+
+        return this.copy(
+            generation = newGeneration,
+        )
+    }
+
+    private val originalFitnessValue = leftPlantType.chromosome.fitness(fitnessFunctionData)
+        .plus(rightPlantType.chromosome.fitness(fitnessFunctionData))
+        .div(2)
+
+    private val targetFitnessValue = originalFitnessValue
+        .plus(originalFitnessValue / REQUIRED_FITNESS_IMPROVEMENT_PERCENTAGE)
+}

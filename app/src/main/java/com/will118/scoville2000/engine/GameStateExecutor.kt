@@ -17,6 +17,7 @@ data class SetLeftGeneticCross(val plantType: PlantType) : GameOperation
 data class SetRightGeneticCross(val plantType: PlantType) : GameOperation
 data class SellDistillate(val distillate: Distillate) : GameOperation
 object ToggleAutoHarvesting : GameOperation
+object ToggleComputation : GameOperation
 data class HarvestOrCompost(val plantPot: PlantPot) : GameOperation
 data class AutoPlantChecked(val plantType: PlantType, val checked: Boolean) : GameOperation
 data class PlantSeed(val seed: Seed) : GameOperation
@@ -63,6 +64,7 @@ class GameStateExecutor(
             is SetLeftGeneticCross -> gameState.setLeftGeneticsPlantType(operation.plantType)
             is SetRightGeneticCross -> gameState.setRightGeneticsPlantType(operation.plantType)
             is SetFitnessSlider -> gameState.updateFitnessSliders(operation.trait, operation.newValue)
+            is ToggleComputation -> gameState.toggleComputation()
         }
 
         return true
