@@ -1,7 +1,6 @@
 package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
-import kotlin.math.roundToInt
 
 @Serializable
 enum class GeneticTrait(override val displayName: String) : Describe {
@@ -21,7 +20,7 @@ data class Gene(
 
 fun flipBits(n: Int): ULong {
     if (n == 0) return 0UL
-    return (0UL).inv().shr(64 - n)
+    return (0UL).inv().shr(ULong.SIZE_BITS - n)
 }
 
 private val emptyGene = Gene(lsb = 0UL, msb = 0UL)
@@ -47,13 +46,13 @@ data class Chromosome(
 
 @Serializable
 data class FitnessFunction(
-    val pepperYield: Int = 250,
-    val scovilleCount: Int = 250,
-    val pepperSize: Int = 250,
-    val growthDuration: Int = 250,
+    val pepperYield: Float = 0.25f,
+    val scovilleCount: Float = 0.25f,
+    val pepperSize: Float = 0.25f,
+    val growthDuration: Float = 0.25f,
 ) {
     companion object {
-        const val MAX = 1000
+        const val MAX = 1.0f
         const val VALUES = 4
         val TRAITS = listOf(
             GeneticTrait.PepperYield,
@@ -63,7 +62,7 @@ data class FitnessFunction(
         )
     }
 
-    fun getValue(trait: GeneticTrait): Int {
+    fun getValue(trait: GeneticTrait): Float {
         return when (trait) {
             GeneticTrait.PepperYield -> pepperYield
             GeneticTrait.ScovilleCount -> scovilleCount
@@ -73,15 +72,15 @@ data class FitnessFunction(
     }
 
     fun setValue(trait: GeneticTrait, newValue: Float): FitnessFunction {
-        val newNormalizedValue = (newValue * 1000).roundToInt()
+        val unchangedNewPortion = 1.0f - newValue
 
-        var newTotal = TRAITS.fold(0) { acc, t ->
-            acc + when (t) {
-                trait -> newNormalizedValue
-                GeneticTrait.PepperYield -> pepperYield
-                GeneticTrait.PepperSize -> pepperSize
-                GeneticTrait.ScovilleCount -> scovilleCount
-                GeneticTrait.GrowthDuration -> growthDuration
+        var sumUnchanged = TRAITS.fold(0.0f) { acc, t ->
+            when (t) {
+                trait -> acc
+                GeneticTrait.PepperYield -> acc + pepperYield
+                GeneticTrait.PepperSize -> acc + pepperSize
+                GeneticTrait.ScovilleCount -> acc + scovilleCount
+                GeneticTrait.GrowthDuration -> acc + growthDuration
             }
         }
 
@@ -90,55 +89,28 @@ data class FitnessFunction(
         var newGrowthDuration = growthDuration
         var newPepperSize = pepperSize
 
-        loop@while (newTotal != MAX) {
-            val isIncrement = newTotal > MAX
-            val amount = if (isIncrement) 1 else -1
+        val f: (Float) -> Float = {
+            when (sumUnchanged) {
+                0.0f -> 1.0f / (VALUES - 1)
+                else -> it / sumUnchanged
+            } * unchangedNewPortion
+        }
 
-            for (t in TRAITS) {
-                val isTarget = t == trait
-                if (newTotal == MAX && !isTarget) break@loop
+        for (t in TRAITS) {
+            val isTarget = t == trait
 
-                when (t) {
-                    GeneticTrait.PepperYield -> {
-                        if (newPepperYield == 0 && isIncrement && !isTarget) continue
-                        newPepperYield =
-                            if (isTarget)
-                                newNormalizedValue
-                            else {
-                                newTotal -= amount
-                                newPepperYield - amount
-                            }
-                    }
-                    GeneticTrait.ScovilleCount -> {
-                        if (newScovilleCount == 0 && isIncrement && !isTarget) continue
-                        newScovilleCount =
-                            if (isTarget)
-                                newNormalizedValue
-                            else {
-                                newTotal -= amount
-                                newScovilleCount - amount
-                            }
+            when (t) {
+                GeneticTrait.PepperYield -> {
+                    newPepperYield = if (isTarget) newValue else f(newPepperYield)
                 }
-                    GeneticTrait.PepperSize -> {
-                        if (newPepperSize == 0 && isIncrement && !isTarget) continue
-                        newPepperSize =
-                            if (isTarget)
-                                newNormalizedValue
-                            else {
-                                newTotal -= amount
-                                newPepperSize - amount
-                            }
-                    }
-                    GeneticTrait.GrowthDuration -> {
-                        if (newGrowthDuration == 0 && isIncrement && !isTarget) continue
-                        newGrowthDuration =
-                            if (isTarget)
-                                newNormalizedValue
-                            else {
-                                newTotal -= amount
-                                newGrowthDuration - amount
-                            }
-                    }
+                GeneticTrait.ScovilleCount -> {
+                    newScovilleCount = if (isTarget) newValue else f(newScovilleCount)
+            }
+                GeneticTrait.PepperSize -> {
+                    newPepperSize = if (isTarget) newValue else f(newPepperSize)
+                }
+                GeneticTrait.GrowthDuration -> {
+                    newGrowthDuration = if (isTarget) newValue else f(newGrowthDuration)
                 }
             }
         }

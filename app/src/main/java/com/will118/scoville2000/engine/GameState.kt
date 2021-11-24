@@ -429,7 +429,6 @@ class GameState(private val data: GameStateData) {
                 newValue = value,
             )
         )
-        println("${_geneticComputationState.value.fitnessFunction}")
     }
 
     private fun calculateCosts(): Long {

@@ -141,7 +141,6 @@ fun GeneticFitnessSliders(
     Row {
         Column {
             for (trait in FitnessFunction.TRAITS) {
-                val value = fitnessFunction.getValue(trait)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = trait.displayName,
@@ -150,14 +149,10 @@ fun GeneticFitnessSliders(
                     )
                     Slider(
                         modifier = Modifier.weight(0.70f),
-                        value = value.div(1000f),
+                        value = fitnessFunction.getValue(trait),
                         onValueChange = { updateFitnessSlider(trait, it) }
                     )
-                    Text(
-                        text = "$value",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.weight(0.20f)
-                    )
+                    Spacer(modifier = Modifier.weight(0.10f))
                 }
             }
         }
