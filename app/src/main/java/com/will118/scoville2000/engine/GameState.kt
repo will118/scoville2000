@@ -448,7 +448,7 @@ class GameState(private val data: GameStateData) {
     }
 
     private fun runGenetics() {
-        _geneticComputationState.value.tickGenerations(1)
+        _geneticComputationState.value = _geneticComputationState.value.tickGenerations(1)
     }
 
     private fun maybeRunGenetics() {
