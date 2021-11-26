@@ -2,6 +2,7 @@ package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlin.random.Random
 
 @Serializable
 enum class GeneticTrait(override val displayName: String) : Describe {
@@ -13,10 +14,23 @@ enum class GeneticTrait(override val displayName: String) : Describe {
 
 @Serializable
 data class Gene(
-    private val lsb: ULong,
-    private val msb: ULong,
+    val lsb: ULong,
+    val msb: ULong,
 ) {
     fun popCount() = lsb.countOneBits() + msb.countOneBits()
+
+    fun cross(other: Gene, crossover: Int): Gene {
+        val crossoverMask = (0UL).inv().shr(crossover)
+        val crossoverMaskInv = crossoverMask.inv()
+
+        val retainedLsb = lsb.and(crossoverMask)
+        val retainedMsb = msb.and(crossoverMask)
+
+        return Gene(
+            lsb = other.lsb.and(crossoverMaskInv).or(retainedLsb),
+            msb = other.msb.and(crossoverMaskInv).or(retainedMsb),
+        )
+    }
 }
 
 fun flipBits(n: Int): ULong {
@@ -47,6 +61,15 @@ data class Chromosome(
             }
         }
     }
+
+    fun cross(right: Chromosome, crossover: Int): Chromosome {
+        return Chromosome(
+            growthDuration = growthDuration.cross(right.growthDuration, crossover = crossover),
+            scovilleCount = scovilleCount.cross(right.scovilleCount, crossover = crossover),
+            pepperSize = pepperSize.cross(right.pepperSize, crossover = crossover),
+            pepperYield = pepperYield.cross(pepperYield, crossover = crossover),
+        )
+    }
 }
 
 @Serializable
@@ -73,7 +96,7 @@ data class FitnessFunctionData(
     fun setValue(trait: GeneticTrait, newValue: Float): FitnessFunctionData {
         val unchangedNewPortion = 1.0f - newValue
 
-        var sumUnchanged = GeneticTrait.values().fold(0.0f) { acc, t ->
+        val sumUnchanged = GeneticTrait.values().fold(0.0f) { acc, t ->
             when (t) {
                 trait -> acc
                 GeneticTrait.PepperYield -> acc + pepperYield
@@ -131,13 +154,44 @@ data class GeneticComputationState(
     val generation: Int,
     val fitnessFunctionData: FitnessFunctionData,
     private val serializedPopulation: List<PlantType>,
+    private val randomSeed: Int = Random.nextInt(),
 ) {
-    private companion object {
+    companion object {
         const val REQUIRED_FITNESS_IMPROVEMENT_PERCENTAGE = 10.0f
+        const val POPULATION_SIZE = 25
+    }
+
+    @Transient
+    private val random = Random(randomSeed).also {
+        // Seek the seed
+        for (i in 0 until generation) {
+            it.nextInt()
+        }
     }
 
     @Transient
     val population = serializedPopulation.toSortedSet(compareBy { it.chromosome.fitness(fitnessFunctionData) })
+
+    init {
+        if (population.size < POPULATION_SIZE) {
+            // use a new random because we only do this once
+            val r = Random.Default
+
+            for (i in population.size until POPULATION_SIZE) {
+                population.add(
+                    cross(
+                        left = leftPlantType,
+                        right = rightPlantType,
+                        crossover = r.nextInt(0, 65)
+                    )
+                )
+            }
+        }
+    }
+
+    private fun cross(left: PlantType, right: PlantType, crossover: Int) = left.copy(
+        chromosome = left.chromosome.cross(right.chromosome, crossover = crossover),
+    )
 
     fun tickGenerations(n: Int): GeneticComputationState {
         var newGeneration = generation
