@@ -168,7 +168,7 @@ class GameState(private val data: GameStateData) {
     var buyer = Buyer.Friends
         private set
 
-    val id: GameId
+    val id: ObjectId
         get() = data.id
 
     fun harvestOrCompost(plantPot: PlantPot) {

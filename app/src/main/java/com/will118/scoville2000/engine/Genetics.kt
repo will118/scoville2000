@@ -2,6 +2,8 @@ package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import java.util.*
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 @Serializable
@@ -169,8 +171,14 @@ data class GeneticComputationState(
         }
     }
 
+    private fun Random.nextCrossover() = this.nextInt(0, 65)
+
     @Transient
-    val population = serializedPopulation.toSortedSet(compareBy { it.chromosome.fitness(fitnessFunctionData) })
+    val population = PriorityQueue(POPULATION_SIZE, compareBy<PlantType>(
+        { it.chromosome.fitness(fitnessFunctionData) },
+        { it.id.lsb },
+        { it.id.msb },
+    )).also { it.addAll(serializedPopulation) }
 
     init {
         if (population.size < POPULATION_SIZE) {
@@ -182,7 +190,7 @@ data class GeneticComputationState(
                     cross(
                         left = leftPlantType,
                         right = rightPlantType,
-                        crossover = r.nextInt(0, 65)
+                        crossover = r.nextCrossover(),
                     )
                 )
             }
@@ -191,7 +199,22 @@ data class GeneticComputationState(
 
     private fun cross(left: PlantType, right: PlantType, crossover: Int) = left.copy(
         chromosome = left.chromosome.cross(right.chromosome, crossover = crossover),
+        id = ObjectId.random(),
     )
+
+    private fun PlantType.maybeMutate(): PlantType {
+        if (random.nextInt() % 7 == 0) {
+            val mutationPoint = random.nextCrossover()
+            when (mutationPoint % 4) {
+                0 -> this.chromosome.pepperYield
+                1 -> this.chromosome.pepperSize
+                2 -> this.chromosome.scovilleCount
+                3 -> this.chromosome.growthDuration
+            }
+            return this.
+        }
+        return this
+    }
 
     fun tickGenerations(n: Int): GeneticComputationState {
         var newGeneration = generation
@@ -199,13 +222,33 @@ data class GeneticComputationState(
         for (i in 0 until n) {
             newGeneration++
 
-            // selection
-            val top2 = population.take(2)
+            // we should be able to remove things from the pq without the UI updating
+            val fittest = population.poll()!!
+            val secondFittest = population.poll()!!
+
+            val crossover = random.nextCrossover()
+
+            val crossA = cross(fittest, secondFittest, crossover).maybeMutate()
+            val crossB = cross(secondFittest, fittest, crossover).maybeMutate()
+
+            population.apply {
+                add(fittest)
+                add(secondFittest)
+                add(crossA)
+                add(crossB)
+            }
         }
 
         return this.copy(
             generation = newGeneration,
         )
+    }
+
+    fun progress(): Int {
+        val topFitnessValue = population.peek()!!.chromosome.fitness(fitnessFunctionData)
+        val range = targetFitnessValue - originalFitnessValue
+        val progress = (topFitnessValue / range) * 100
+        return progress.roundToInt()
     }
 
     private val originalFitnessValue = leftPlantType.chromosome.fitness(fitnessFunctionData)

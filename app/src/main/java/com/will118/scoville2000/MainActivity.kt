@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Routes.ChilliDex) {
                             ChilliDex(
-                                gameStateId = game.state.id,
+                                objectStateId = game.state.id,
                                 gameStateExecutor = game.executor,
                                 currentPlantTypes = game.state.plantTypes,
                                 plantSeed = { game.executor.enqueueSync(PlantSeed(it)) },

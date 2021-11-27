@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.will118.scoville2000.engine.GameId
+import com.will118.scoville2000.engine.ObjectId
 import com.will118.scoville2000.engine.GameStateExecutor
 import com.will118.scoville2000.engine.PlantType
 import com.will118.scoville2000.engine.Seed
@@ -30,7 +30,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 @ExperimentalCoroutinesApi
 @Composable
 fun ChilliDex(
-    gameStateId: GameId,
+    objectStateId: ObjectId,
     gameStateExecutor: GameStateExecutor,
     currentPlantTypes: SnapshotStateList<PlantType>,
     plantSeed: (Seed) -> Unit,
@@ -38,7 +38,7 @@ fun ChilliDex(
     autoPlantChecked: (PlantType, Boolean) -> Unit,
     onGameOver: () -> Unit,
 ) {
-    LaunchedEffect(key1 = gameStateId, block = {
+    LaunchedEffect(key1 = objectStateId, block = {
         gameStateExecutor.loop(onGameOver)
     })
 

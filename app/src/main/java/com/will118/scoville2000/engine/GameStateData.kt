@@ -5,18 +5,19 @@ import java.time.Instant
 import java.util.*
 
 @Serializable
-data class GameId(val msb: Long, val lsb: Long) {
+data class ObjectId(val msb: Long, val lsb: Long) {
     companion object {
-        fun fromUUID(uuid: UUID) = GameId(
+        private fun fromUUID(uuid: UUID) = ObjectId(
             msb = uuid.mostSignificantBits,
             lsb = uuid.leastSignificantBits,
         )
+        fun random() = fromUUID(UUID.randomUUID())
     }
 }
 
 @Serializable
 data class GameStateData(
-    val id: GameId = GameId.fromUUID(UUID.randomUUID()),
+    val id: ObjectId = ObjectId.random(),
 //    var balance: Currency = Currency(80),
     var balance: Currency = Currency(80000000000000000),
     var area: Area = Area.WindowSill,

@@ -12,6 +12,7 @@ data class PlantType(
     val chromosome: Chromosome,
     override val cost: Currency?, // For seeds
     val autoPlantChecked: Boolean = false,
+    val id: ObjectId = ObjectId.random(),
 ): Describe, Purchasable {
     companion object {
         // TODO: would be nice to derive from code
