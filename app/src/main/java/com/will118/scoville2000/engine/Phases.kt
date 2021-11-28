@@ -46,6 +46,8 @@ data class Phases(
         Pair(ripeningDays, PhaseNames.Ripening),
     )
 
+    val totalDuration = orderedPhases.sumOf { it.first }
+
     fun currentPhase(elapsed: Duration): PhaseNames? {
         var remaining = elapsed.toDays()
 

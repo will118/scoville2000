@@ -11,7 +11,6 @@ import kotlin.random.Random
 @Serializable
 data class PlantType(
     override val displayName: String,
-    val phases: Phases,
     val chromosome: Chromosome,
     val autoPlantChecked: Boolean = false,
     val id: Int,
@@ -24,6 +23,8 @@ data class PlantType(
     companion object {
         // TODO: would be nice to derive from code
         const val TOTAL_PEPPER_TYPES = 99
+        private const val MIN_GROWTH = 0.25f
+        private const val MAX_GROWTH = 13.00f
 
         fun SerializableRandom.plantId() = this.nextInt(5, Int.MAX_VALUE)
 
@@ -31,7 +32,6 @@ data class PlantType(
 
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
-            phases = Phases.ofScale(1.0f),
             chromosome = Chromosome(
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom)
             ),
@@ -43,7 +43,6 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 2, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 3, random = geneRandom),
             ),
-            phases = Phases.ofScale(0.75f),
             id = 2,
         )
         val Guajillo = PlantType(
@@ -52,7 +51,6 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 3, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
-            phases = Phases.ofScale(1.0f),
             id = 3,
         )
         val Jalapeno = PlantType(
@@ -61,7 +59,6 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 4, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
-            phases = Phases.ofScale(1.0f),
             id = 4,
         )
         val BirdsEye = PlantType(
@@ -70,10 +67,17 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 8, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 1, random = geneRandom),
             ),
-            phases = Phases.ofScale(2.5f),
             id = 5,
         )
     }
+
+    private val growthDuration: Float
+        get() {
+            val power = chromosome.growthDuration.popCount().toFloat() / Gene.MAX
+            return max(MIN_GROWTH, min(MAX_GROWTH, (1.0f - power) * MAX_GROWTH))
+        }
+
+    val phases = Phases.ofScale(growthDuration)
 
     val yield: Long
         get() {
@@ -83,14 +87,6 @@ data class PlantType(
     val size: Long
         get() {
             return 5 + chromosome.pepperSize.popCount().toLong()
-        }
-
-    val growthDuration: Float
-        get() {
-            val power = chromosome.growthDuration.popCount().toFloat() / Gene.MAX
-            val MIN = 0.25f
-            val MAX = 13.00f
-            return max(MIN, min(MAX, (1.0f - power) * MAX))
         }
 
     val scovilles: Scovilles

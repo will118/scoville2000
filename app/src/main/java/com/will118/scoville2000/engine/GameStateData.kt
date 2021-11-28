@@ -41,12 +41,6 @@ data class GameStateData(
     ),
     val geneticComputationState: GeneticComputationState = GeneticComputationState.default()
 ) {
-    init {
-        println("init::")
-        printHashCodes()
-        print("::")
-    }
-
     fun printHashCodes() {
         println(
         "   snap: ${hashCode()}\n" +

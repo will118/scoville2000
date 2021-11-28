@@ -160,7 +160,7 @@ fun ChilliDex(
                                     Spacer(modifier = Modifier.height(5.dp))
                                     StatText(
                                         name = "Growth Duration",
-                                        value = "%.${2}f".format(plantType.growthDuration),
+                                        value = "${plantType.phases.totalDuration}",
                                         size = 12.sp,
                                     )
                                     Spacer(modifier = Modifier.height(5.dp))
@@ -206,7 +206,7 @@ fun renderUnknownIcon() {
 fun renderPlantIcon() {
     Canvas(modifier = Modifier.fillMaxSize()) {
         drawRect(
-            color = Color.Blue,
+            color = Color.LightGray,
             topLeft = Offset(0f, 0f),
             size = Size(
                 width = this.size.width,

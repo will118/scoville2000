@@ -46,9 +46,6 @@ class GameStateExecutor(
         when (val operation = channel.receive()) {
             is Save -> {
                 val snapshot = gameState.snapshot()
-                println("save::")
-                snapshot.printHashCodes()
-                print("::")
                 onSaveTick(snapshot)
             }
             is Tick -> {
