@@ -19,7 +19,10 @@ data class StockLevel(val quantity: Long) {
 @Serializable
 data class FractionalStockLevel(val quantity: Long, val thousandths: Int) {
     override fun toString(): String {
-        return "${quantity}.${thousandths}"
+        if (thousandths == 1000 || thousandths == 0) {
+            return "${quantity + 1}.00"
+        }
+        return "${quantity}.${thousandths / 10}"
     }
 }
 
@@ -447,8 +450,19 @@ class GameState(private val data: GameStateData) {
          )
     }
 
+    private fun onGeneticsComplete(newPlantType: PlantType) {
+        println("Genetics complete")
+        _plantTypes.add(newPlantType)
+        _geneticComputationState.value = GeneticComputationState.default()
+    }
+
     private fun runGenetics() {
-        _geneticComputationState.value = _geneticComputationState.value.tickGenerations(1)
+        val nextGeneration = _geneticComputationState.value.tickGenerations(n = 1)
+        if (nextGeneration.progress() >= 100) {
+            onGeneticsComplete(_geneticComputationState.value.final())
+        } else {
+            _geneticComputationState.value = nextGeneration
+        }
     }
 
     private fun maybeRunGenetics() {
@@ -462,7 +476,7 @@ class GameState(private val data: GameStateData) {
         )
 
         when {
-            quantumCaps.thousandths > qcapCostThousandths -> {
+            quantumCaps.thousandths >= qcapCostThousandths -> {
                 _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
                     thousandths = quantumCaps.thousandths - qcapCostThousandths
                 )
@@ -544,8 +558,6 @@ class GameState(private val data: GameStateData) {
         distillateInventory = _distillateInventory.toList(),
         technologies = _technologies.toList(),
         plantTypes = _plantTypes.toList(),
-        geneticComputationState = _geneticComputationState.value.copy(
-            serializedPopulation = _geneticComputationState.value.population.toList()
-        ),
+        geneticComputationState = _geneticComputationState.value.snapshot(),
     )
 }

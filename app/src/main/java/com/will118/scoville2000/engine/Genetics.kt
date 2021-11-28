@@ -1,7 +1,9 @@
 package com.will118.scoville2000.engine
 
+import com.will118.scoville2000.engine.PlantType.Companion.plantId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import java.lang.Integer.min
 import java.util.*
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -16,31 +18,52 @@ enum class GeneticTrait(override val displayName: String) : Describe {
 
 @Serializable
 data class Gene(
-    val lsb: ULong,
-    val msb: ULong,
+    val lo: ULong,
+    val hi: ULong,
 ) {
-    fun popCount() = lsb.countOneBits() + msb.countOneBits()
+    companion object {
+        fun withOneBits(bitCount: Int, random: Random = Random.Default) =
+            generateSequence { random.nextInt(0, 63) }
+                .distinct()
+                .take(bitCount)
+                .withIndex()
+                .fold(Gene(lo = 0UL, hi = 0UL)) { acc, indexedValue ->
+                    if (indexedValue.index % 2 == 0)
+                        acc.copy(lo = acc.lo.or((1UL).shl(indexedValue.value)) )
+                    else
+                        acc.copy(hi = acc.hi.or((1UL).shl(indexedValue.value)) )
+                }
+    }
 
-    fun cross(other: Gene, crossover: Int): Gene {
-        val crossoverMask = (0UL).inv().shr(crossover)
-        val crossoverMaskInv = crossoverMask.inv()
+    fun popCount() = lo.countOneBits() + hi.countOneBits()
 
-        val retainedLsb = lsb.and(crossoverMask)
-        val retainedMsb = msb.and(crossoverMask)
+    fun mutate(bitIndex: Int): Gene {
+        val toggleMask = (1UL).shl(bitIndex)
 
         return Gene(
-            lsb = other.lsb.and(crossoverMaskInv).or(retainedLsb),
-            msb = other.msb.and(crossoverMaskInv).or(retainedMsb),
+            lo = lo.xor(toggleMask),
+            hi = hi.xor(toggleMask),
+        )
+    }
+
+    fun cross(other: Gene, crossover: Int): Gene {
+        require(crossover < ULong.SIZE_BITS)
+        require(crossover >= 0)
+
+        val crossoverMask = (0UL).inv().shl(crossover)
+        val crossoverMaskInv = crossoverMask.inv()
+
+        val retainedLsb = lo.and(crossoverMask)
+        val retainedMsb = hi.and(crossoverMask)
+
+        return Gene(
+            lo = other.lo.and(crossoverMaskInv).or(retainedLsb),
+            hi = other.hi.and(crossoverMaskInv).or(retainedMsb),
         )
     }
 }
 
-fun flipBits(n: Int): ULong {
-    if (n == 0) return 0UL
-    return (0UL).inv().shr(ULong.SIZE_BITS - n)
-}
-
-private val emptyGene = Gene(lsb = 0UL, msb = 0UL)
+private val emptyGene = Gene(lo = 0UL, hi = 0UL)
 
 @Serializable
 data class Chromosome(
@@ -49,6 +72,11 @@ data class Chromosome(
     val pepperSize: Gene = emptyGene,
     val growthDuration: Gene = emptyGene,
 ) {
+    val totalPopCount = pepperSize.popCount()
+        .plus(pepperYield.popCount())
+        .plus(scovilleCount.popCount())
+        .plus(growthDuration.popCount())
+
     fun fitness(fitnessFunction: FitnessFunctionData): Float {
         return GeneticTrait.values().fold(0f) { acc, trait ->
             acc + when (trait) {
@@ -62,6 +90,14 @@ data class Chromosome(
                     growthDuration.popCount().times(fitnessFunction.growthDuration)
             }
         }
+    }
+
+    fun mutate(mutationPoint: Int) = when (mutationPoint % 4) {
+        0 -> copy(pepperYield = pepperYield.mutate(mutationPoint))
+        1 -> copy(pepperSize = pepperSize.mutate(mutationPoint))
+        2 -> copy(scovilleCount = scovilleCount.mutate(mutationPoint))
+        3 -> copy(growthDuration = growthDuration.mutate(mutationPoint))
+        else -> throw Exception("unreachable")
     }
 
     fun cross(right: Chromosome, crossover: Int): Chromosome {
@@ -156,105 +192,134 @@ data class GeneticComputationState(
     val generation: Int,
     val fitnessFunctionData: FitnessFunctionData,
     private val serializedPopulation: List<PlantType>,
-    private val randomSeed: Int = Random.nextInt(),
+    private var random: SerializableRandom = SerializableRandom.fromSeed(),
 ) {
+    init {
+        random = random.copy()
+    }
+
     companion object {
-        const val REQUIRED_FITNESS_IMPROVEMENT_PERCENTAGE = 10.0f
+        const val REQUIRED_FITNESS_IMPROVEMENT_FACTOR = 20.0f // umm
         const val POPULATION_SIZE = 25
+
+        fun default() = GeneticComputationState(
+            leftPlantType = PlantType.BellPepper,
+            rightPlantType = PlantType.BellPepper,
+            isActive = false,
+            fitnessFunctionData = FitnessFunctionData(),
+            generation = 0,
+            serializedPopulation = emptyList(),
+        )
+        private fun SerializableRandom.nextGeneIndex() = this.nextInt(0, 64) // 0..63
     }
 
     @Transient
-    private val random = Random(randomSeed).also {
-        // Seek the seed
-        for (i in 0 until generation) {
-            it.nextInt()
-        }
-    }
-
-    private fun Random.nextCrossover() = this.nextInt(0, 65)
-
-    @Transient
-    val population = PriorityQueue(POPULATION_SIZE, compareBy<PlantType>(
+    val population = TreeSet(compareBy<PlantType>(
         { it.chromosome.fitness(fitnessFunctionData) },
-        { it.id.lsb },
-        { it.id.msb },
+        { it.id }
     )).also { it.addAll(serializedPopulation) }
 
-    init {
-        if (population.size < POPULATION_SIZE) {
-            // use a new random because we only do this once
-            val r = Random.Default
-
-            for (i in population.size until POPULATION_SIZE) {
-                population.add(
-                    cross(
-                        left = leftPlantType,
-                        right = rightPlantType,
-                        crossover = r.nextCrossover(),
-                    )
-                )
-            }
+    // Used to clean up the least fit (n.b. it will be the argument if that is the least fit)
+    private fun swapIntoPopulation(plantType: PlantType) {
+        population.add(plantType)
+        if (population.size > POPULATION_SIZE) {
+            population.pollFirst() // the lowest
         }
     }
 
     private fun cross(left: PlantType, right: PlantType, crossover: Int) = left.copy(
+        displayName = "",
         chromosome = left.chromosome.cross(right.chromosome, crossover = crossover),
-        id = ObjectId.random(),
+        id = random.plantId(),
     )
 
-    private fun PlantType.maybeMutate(): PlantType {
-        if (random.nextInt() % 7 == 0) {
-            val mutationPoint = random.nextCrossover()
-            when (mutationPoint % 4) {
-                0 -> this.chromosome.pepperYield
-                1 -> this.chromosome.pepperSize
-                2 -> this.chromosome.scovilleCount
-                3 -> this.chromosome.growthDuration
-            }
-            return this.
+    private fun PlantType.crossAndMaybeMutate(
+        other: PlantType,
+        crossover: Int,
+    ): PlantType {
+        val crossed = cross(this, other, crossover)
+
+        if (random.nextInt() % 2 == 0) {
+            val mutationPoint = random.nextGeneIndex()
+            val c = crossed.chromosome.mutate(mutationPoint)
+            return crossed.copy(chromosome = c)
         }
-        return this
+
+        return crossed
     }
 
     fun tickGenerations(n: Int): GeneticComputationState {
-        var newGeneration = generation
-
         for (i in 0 until n) {
-            newGeneration++
+            if (population.size < 10) {
+                population.add(
+                    cross(leftPlantType, rightPlantType, random.nextGeneIndex())
+                )
+                continue
+            }
 
             // we should be able to remove things from the pq without the UI updating
-            val fittest = population.poll()!!
-            val secondFittest = population.poll()!!
+            val fittest = population.pollLast()
+            val secondFittest = population.pollLast()
 
-            val crossover = random.nextCrossover()
+            val crossover = random.nextGeneIndex()
 
-            val crossA = cross(fittest, secondFittest, crossover).maybeMutate()
-            val crossB = cross(secondFittest, fittest, crossover).maybeMutate()
+            val crossA = fittest.crossAndMaybeMutate(secondFittest, crossover)
+            val crossB = secondFittest.crossAndMaybeMutate(fittest, crossover)
 
-            population.apply {
-                add(fittest)
-                add(secondFittest)
-                add(crossA)
-                add(crossB)
-            }
+            swapIntoPopulation(fittest)
+            swapIntoPopulation(secondFittest)
+            swapIntoPopulation(crossA)
+            swapIntoPopulation(crossB)
         }
 
         return this.copy(
-            generation = newGeneration,
+            generation = generation + n,
+            serializedPopulation = population.toList(),
         )
     }
 
     fun progress(): Int {
-        val topFitnessValue = population.peek()!!.chromosome.fitness(fitnessFunctionData)
+        if (population.size == 0) return 0
+
         val range = targetFitnessValue - originalFitnessValue
+        val topFitnessValue = population.last()!!.chromosome.fitness(fitnessFunctionData)
         val progress = (topFitnessValue / range) * 100
-        return progress.roundToInt()
+
+        return min(100, progress.roundToInt())
     }
 
-    private val originalFitnessValue = leftPlantType.chromosome.fitness(fitnessFunctionData)
-        .plus(rightPlantType.chromosome.fitness(fitnessFunctionData))
-        .div(2)
+    fun final(): PlantType {
+        val fittest = population.last()
+        val name = nameCross(
+            leftPlantType = leftPlantType,
+            rightPlantType = rightPlantType,
+            strength = fittest.chromosome.totalPopCount,
+        )
+        return fittest.copy(
+            displayName = name,
+            id = random.plantId(),
+        )
+    }
 
-    private val targetFitnessValue = originalFitnessValue
-        .plus(originalFitnessValue / REQUIRED_FITNESS_IMPROVEMENT_PERCENTAGE)
+    private fun nameCross(
+        leftPlantType: PlantType,
+        rightPlantType: PlantType,
+        strength: Int
+    ): String {
+        return "California Reaper"
+    }
+
+    private val originalFitnessValue =
+        leftPlantType.chromosome.fitness(fitnessFunctionData)
+            .plus(rightPlantType.chromosome.fitness(fitnessFunctionData))
+            .div(2)
+
+    private val targetFitnessValue = originalFitnessValue * REQUIRED_FITNESS_IMPROVEMENT_FACTOR
+
+    fun snapshot(): GeneticComputationState {
+        return this.copy(
+            random = random.copy(),
+            serializedPopulation = population.toList(),
+        )
+    }
 }

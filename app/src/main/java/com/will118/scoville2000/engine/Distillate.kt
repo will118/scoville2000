@@ -24,7 +24,7 @@ enum class Distillate(
         displayName = "Hot Sauce",
     ),
     QuantumCapsicum(
-        requiredScovilles = Scovilles(1_000_000_000_000),
+        requiredScovilles = Scovilles(100_000_000_000),
         priceMultiplier = 0,
         displayName = "Quantum Capsicum",
     ),

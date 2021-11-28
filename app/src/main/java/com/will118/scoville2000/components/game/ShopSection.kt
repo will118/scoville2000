@@ -112,8 +112,6 @@ fun ShopSection(
         Text(text = "Shop", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
 
-        Text(text = "Seeds", style = Typography.subtitle2)
-        Spacer(modifier = Modifier.height(5.dp))
         if (currentTechnologies.contains(Technology.ChimoleonGenetics)) {
             Button(
                 onClick = { navigateToChilliDex() },
@@ -127,6 +125,8 @@ fun ShopSection(
                 Text("ChilliDEX")
             }
         } else {
+            Text(text = "Seeds", style = Typography.subtitle2)
+            Spacer(modifier = Modifier.height(5.dp))
             val hasAutoPlanter = currentTechnologies.contains(Technology.AutoPlanter)
             SeedTable(
                 hasAutoPlanter = hasAutoPlanter,

@@ -34,10 +34,10 @@ fun GeneticsSection(
         FractionalStockLevel(quantity = 0, thousandths = 0),
     )
 
-    val (progress, setProgress) = remember { mutableStateOf(20f) }
+    val progress = geneticComputationState.progress()
 
     val animatedProgress = animateFloatAsState(
-        targetValue = progress,
+        targetValue = progress.toFloat(),
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
     ).value
 

@@ -18,7 +18,7 @@ class GeneticStateTests {
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
             serializedPopulation = emptyList(),
-            randomSeed = SEED,
+            random = SerializableRandom.fromSeed(SEED),
         )
 
         assertEquals(GeneticComputationState.POPULATION_SIZE, state.population.size)
@@ -33,11 +33,42 @@ class GeneticStateTests {
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
             serializedPopulation = emptyList(),
-            randomSeed = SEED,
+            random = SerializableRandom.fromSeed(SEED),
         )
 
-        val newState = state.tickGenerations(20)
+        // tickGenerations mutates the population so we have to get progress here
+        val originalProgress = state.progress()
 
-        assertTrue(newState.progress() > state.progress())
+        state = state.tickGenerations(n = 20)
+
+        assertTrue(state.progress() > originalProgress)
+    }
+
+    @Test
+    fun `sample progress`() {
+        // this test is to help tune the genetics
+        var state = GeneticComputationState(
+            leftPlantType = PlantType.BellPepper,
+            rightPlantType = PlantType.BirdsEye,
+            isActive = false,
+            fitnessFunctionData = FitnessFunctionData(),
+            generation = 0,
+            serializedPopulation = emptyList(),
+            random = SerializableRandom.fromSeed(SEED),
+        )
+
+        assertEquals(0, state.progress())
+
+        state = state.tickGenerations(50)
+
+        assertEquals(49, state.progress())
+
+        state = state.tickGenerations(50)
+
+        assertEquals(83, state.progress())
+
+        state = state.tickGenerations(50)
+
+        assertEquals(100, state.progress())
     }
 }

@@ -36,14 +36,18 @@ class GameStateExecutor(
 ) {
     companion object {
         const val TICK_PERIOD_MS = 250L
-        const val SAVE_PERIOD_MS = 1_000L
+        const val SAVE_PERIOD_MS = 10_000L
     }
 
     private val channel = Channel<GameOperation>(Channel.UNLIMITED)
 
     private suspend fun executorLoop(): Boolean {
         when (val operation = channel.receive()) {
-            is Save -> onSaveTick(gameState.snapshot())
+            is Save -> {
+                val snapshot = gameState.snapshot()
+                println("save: ${snapshot.hashCode()}")
+                onSaveTick(snapshot)
+            }
             is Tick -> {
                 if (gameState.onTick()) {
                     return false

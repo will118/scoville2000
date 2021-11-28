@@ -4,63 +4,71 @@ import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.pow
+import kotlin.random.Random
 
 @Serializable
 data class PlantType(
     override val displayName: String,
     val phases: Phases,
     val chromosome: Chromosome,
-    override val cost: Currency?, // For seeds
     val autoPlantChecked: Boolean = false,
-    val id: ObjectId = ObjectId.random(),
+    val id: Int,
 ): Describe, Purchasable {
+    override val cost = Currency(
+        total = chromosome.totalPopCount.toDouble().pow(2.0).toLong()
+    )
+
     companion object {
         // TODO: would be nice to derive from code
         const val TOTAL_PEPPER_TYPES = 99
+
+        fun SerializableRandom.plantId() = this.nextInt(5, Int.MAX_VALUE)
+
+        private val geneRandom = Random(118) // have this the same across games
 
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
             phases = Phases.DEFAULT,
             chromosome = Chromosome(
-                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+                pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom)
             ),
-            cost = Currency(2),
+            id = 1,
         )
         val Poblano = PlantType(
             displayName = "Poblano",
             chromosome = Chromosome(
-                scovilleCount = Gene(lsb = flipBits(1), msb = flipBits(1)),
-                pepperYield = Gene(lsb = flipBits(2), msb = flipBits(1)),
+                scovilleCount = Gene.withOneBits(bitCount = 2, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 3, random = geneRandom),
             ),
             phases = Phases.DEFAULT,
-            cost = Currency(20),
+            id = 2,
         )
         val Guajillo = PlantType(
             displayName = "Guajillo",
             chromosome = Chromosome(
-                scovilleCount = Gene(lsb = flipBits(2), msb = flipBits(1)),
-                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+                scovilleCount = Gene.withOneBits(bitCount = 3, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
             phases = Phases.DEFAULT,
-            cost = Currency(50),
+            id = 3,
         )
         val Jalapeno = PlantType(
             displayName = "Jalapeño",
             chromosome = Chromosome(
-                scovilleCount = Gene(lsb = flipBits(2), msb = flipBits(2)),
-                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+                scovilleCount = Gene.withOneBits(bitCount = 4, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
             phases = Phases.DEFAULT,
-            cost = Currency(100),
+            id = 4,
         )
         val BirdsEye = PlantType(
             displayName = "Bird's Eye",
             chromosome = Chromosome(
-                scovilleCount = Gene(lsb = flipBits(4), msb = flipBits(4)),
-                pepperYield = Gene(lsb = flipBits(1), msb = flipBits(1)),
+                scovilleCount = Gene.withOneBits(bitCount = 8, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 1, random = geneRandom),
             ),
             phases = Phases.DEFAULT,
-            cost = Currency(200),
+            id = 5,
         )
     }
 

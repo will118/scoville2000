@@ -5,11 +5,11 @@ import java.time.Instant
 import java.util.*
 
 @Serializable
-data class ObjectId(val msb: Long, val lsb: Long) {
+data class ObjectId(val hi: Long, val lo: Long) {
     companion object {
         private fun fromUUID(uuid: UUID) = ObjectId(
-            msb = uuid.mostSignificantBits,
-            lsb = uuid.leastSignificantBits,
+            hi = uuid.mostSignificantBits,
+            lo = uuid.leastSignificantBits,
         )
         fun random() = fromUUID(UUID.randomUUID())
     }
@@ -39,12 +39,5 @@ data class GameStateData(
     val plantTypes: List<PlantType> = listOf(
         PlantType.BellPepper,
     ),
-    val geneticComputationState: GeneticComputationState = GeneticComputationState(
-        leftPlantType = PlantType.BellPepper,
-        rightPlantType = PlantType.BellPepper,
-        isActive = false,
-        fitnessFunctionData = FitnessFunctionData(),
-        generation = 0,
-        serializedPopulation = emptyList(),
-    )
+    val geneticComputationState: GeneticComputationState = GeneticComputationState.default()
 )
