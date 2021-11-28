@@ -28,6 +28,7 @@ fun GeneticsSection(
     plantTypes: SnapshotStateList<PlantType>,
     updateFitnessSlider: (GeneticTrait, Float) -> Unit,
     toggleComputation: () -> Unit,
+    resetComputation: () -> Unit,
 ) {
     val quantumCaps = distillateInventory.getOrDefault(
         Distillate.QuantumCapsicum,
@@ -86,16 +87,18 @@ fun GeneticsSection(
                         .clickable(onClick = { rightExpanded = true })
                 )
 
-                DropdownMenu(
-                    expanded = rightExpanded,
-                    onDismissRequest = { rightExpanded = false },
-                ) {
-                    plantTypes.forEachIndexed { index, pt ->
-                        DropdownMenuItem(onClick = {
-                            setRightPlantType(plantTypes[index])
-                            rightExpanded = false
-                        }) {
-                            Text(text = pt.displayName)
+                if (!geneticComputationState.wasStarted) {
+                    DropdownMenu(
+                        expanded = rightExpanded,
+                        onDismissRequest = { rightExpanded = false },
+                    ) {
+                        plantTypes.forEachIndexed { index, pt ->
+                            DropdownMenuItem(onClick = {
+                                setRightPlantType(plantTypes[index])
+                                rightExpanded = false
+                            }) {
+                                Text(text = pt.displayName)
+                            }
                         }
                     }
                 }
@@ -127,6 +130,7 @@ fun GeneticsSection(
         Spacer(modifier = Modifier.height(10.dp))
 
         GeneticFitnessSliders(
+            wasStarted = geneticComputationState.wasStarted,
             fitnessFunction = geneticComputationState.fitnessFunctionData,
             updateFitnessSlider = updateFitnessSlider,
         )
@@ -136,13 +140,22 @@ fun GeneticsSection(
         Button(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = toggleComputation,
-//            colors = ButtonDefaults.buttonColors(
-//                backgroundColor = Color.White,
-//                contentColor = Color.Red),
         ) {
             Text(
                 text = if (geneticComputationState.isActive) "PAUSE" else "START",
             )
+        }
+
+        if (!geneticComputationState.isActive && geneticComputationState.wasStarted) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                onClick = resetComputation,
+            ) {
+                Text(
+                    text = "RESET"
+                )
+            }
         }
     }
 }
@@ -150,8 +163,9 @@ fun GeneticsSection(
 @ExperimentalComposeUiApi
 @Composable
 fun GeneticFitnessSliders(
+    wasStarted: Boolean,
     fitnessFunction: FitnessFunctionData,
-    updateFitnessSlider: (GeneticTrait, Float) -> Unit
+    updateFitnessSlider: (GeneticTrait, Float) -> Unit,
 ) {
     Row {
         Column {
@@ -163,6 +177,7 @@ fun GeneticFitnessSliders(
                         modifier = Modifier.weight(0.20f)
                     )
                     Slider(
+                        enabled = !wasStarted,
                         modifier = Modifier.weight(0.70f),
                         value = fitnessFunction.getValue(trait),
                         onValueChange = { updateFitnessSlider(trait, it) }

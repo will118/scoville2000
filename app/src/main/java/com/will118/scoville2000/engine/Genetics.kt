@@ -22,6 +22,8 @@ data class Gene(
     val hi: ULong,
 ) {
     companion object {
+        const val MAX = ULong.SIZE_BITS + ULong.SIZE_BITS
+
         fun withOneBits(bitCount: Int, random: Random = Random.Default) =
             generateSequence { random.nextInt(0, 63) }
                 .distinct()
@@ -191,15 +193,12 @@ data class GeneticComputationState(
     val isActive: Boolean,
     val generation: Int,
     val fitnessFunctionData: FitnessFunctionData,
+    val wasStarted: Boolean = false,
     private val serializedPopulation: List<PlantType>,
     private var random: SerializableRandom = SerializableRandom.fromSeed(),
 ) {
-    init {
-        random = random.copy()
-    }
-
     companion object {
-        const val REQUIRED_FITNESS_IMPROVEMENT_FACTOR = 20.0f // umm
+        const val REQUIRED_FITNESS_IMPROVEMENT_FACTOR = 15.0f // umm
         const val POPULATION_SIZE = 25
 
         fun default() = GeneticComputationState(
@@ -278,6 +277,10 @@ data class GeneticComputationState(
         )
     }
 
+    // State library is quite annoying about hashcodes changing.
+    // Let's hope we know best...
+    override fun hashCode(): Int = generation
+
     fun progress(): Int {
         if (population.size == 0) return 0
 
@@ -296,6 +299,7 @@ data class GeneticComputationState(
             strength = fittest.chromosome.totalPopCount,
         )
         return fittest.copy(
+            lineage = Pair(leftPlantType, rightPlantType),
             displayName = name,
             id = random.plantId(),
         )
@@ -317,9 +321,6 @@ data class GeneticComputationState(
     private val targetFitnessValue = originalFitnessValue * REQUIRED_FITNESS_IMPROVEMENT_FACTOR
 
     fun snapshot(): GeneticComputationState {
-        return this.copy(
-            random = random.copy(),
-            serializedPopulation = population.toList(),
-        )
+        return this.copy(serializedPopulation = population.toList())
     }
 }

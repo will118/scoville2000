@@ -26,7 +26,7 @@ data class FractionalStockLevel(val quantity: Long, val thousandths: Int) {
     }
 }
 
-fun MutableList<() -> Boolean>.tryPopFirst() {
+fun MutableList<() -> Boolean>.tryPop() {
     firstOrNull()?.let {
         if (it()) {
             removeAt(0)
@@ -324,6 +324,9 @@ class GameState(private val data: GameStateData) {
     fun buyTechnology(desiredTechnology: Technology) {
         if (deductPurchaseCost(desiredTechnology)) {
             _technologies.add(desiredTechnology)
+            if (desiredTechnology == Technology.AutoHarvester) {
+                toggleAutoHarvesting()
+            }
         }
     }
 
@@ -427,7 +430,17 @@ class GameState(private val data: GameStateData) {
 
     fun toggleComputation() {
         val newState = !_geneticComputationState.value.isActive
-        _geneticComputationState.value = _geneticComputationState.value.copy(isActive = newState)
+        _geneticComputationState.value = _geneticComputationState.value.copy(
+            isActive = newState,
+            wasStarted = _geneticComputationState.value.wasStarted || newState,
+        )
+    }
+
+    fun resetComputation() {
+        _geneticComputationState.value = GeneticComputationState.default().copy(
+            leftPlantType = _geneticComputationState.value.leftPlantType,
+            rightPlantType = _geneticComputationState.value.rightPlantType,
+        )
     }
 
     fun updateFitnessSliders(trait: GeneticTrait, value: Float) {
@@ -457,9 +470,9 @@ class GameState(private val data: GameStateData) {
     }
 
     private fun runGenetics() {
-        val nextGeneration = _geneticComputationState.value.tickGenerations(n = 1)
-        if (nextGeneration.progress() >= 100) {
-            onGeneticsComplete(_geneticComputationState.value.final())
+        val nextGeneration = _geneticComputationState.value.tickGenerations(n = 10)
+        if (nextGeneration.progress() == 100) {
+            onGeneticsComplete(nextGeneration.final())
         } else {
             _geneticComputationState.value = nextGeneration
         }
@@ -476,9 +489,16 @@ class GameState(private val data: GameStateData) {
         )
 
         when {
-            quantumCaps.thousandths >= qcapCostThousandths -> {
+            quantumCaps.thousandths > qcapCostThousandths -> {
                 _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
                     thousandths = quantumCaps.thousandths - qcapCostThousandths
+                )
+                runGenetics()
+            }
+            quantumCaps.thousandths == qcapCostThousandths && quantumCaps.quantity > 0 -> {
+                _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                    quantity = quantumCaps.quantity - 1,
+                    thousandths = 1000,
                 )
                 runGenetics()
             }
@@ -543,8 +563,8 @@ class GameState(private val data: GameStateData) {
                 }
             }
 
-//            progressionStack.tryPopFirst()
-            plantTypeStack.tryPopFirst()
+//            progressionStack.tryPop()
+            plantTypeStack.tryPop()
 
             maybeRunGenetics()
         }

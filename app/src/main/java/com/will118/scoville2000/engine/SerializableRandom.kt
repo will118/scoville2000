@@ -19,11 +19,6 @@ data class SerializableRandom(
     private var v: Int,
     private var addend: Int
 ){
-    init {
-        // some trivial seeds can produce several values with zeroes in upper bits, so we discard first 64
-        repeat(64) { nextInt() }
-    }
-
     companion object {
         fun fromSeed(seed: Int = Random.Default.nextInt()) = SerializableRandom(
             x = seed,
@@ -32,14 +27,16 @@ data class SerializableRandom(
             w = 0,
             v = seed.inv(),
             addend = (seed shl 10) xor (seed.shr(31) ushr 4)
-        )
+        ).apply {
+            // some trivial seeds can produce several values with zeroes in upper bits, so we discard first 64
+            repeat(64) { nextInt() }
+        }
 
         private fun fastLog2(value: Int): Int = 31 - value.countLeadingZeroBits()
 
         private fun Int.takeUpperBits(bitCount: Int): Int =
             this.ushr(32 - bitCount) and (-bitCount).shr(31)
     }
-
 
     fun nextInt(from: Int, until: Int): Int {
         val n = until - from

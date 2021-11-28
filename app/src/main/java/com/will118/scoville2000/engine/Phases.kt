@@ -2,6 +2,7 @@ package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
 import java.time.Duration
+import kotlin.math.roundToInt
 
 @Serializable
 enum class PhaseNames(val displayName: String) {
@@ -26,13 +27,13 @@ data class Phases(
     private val ripeningDays: Int,
 ) {
     companion object {
-        val DEFAULT = Phases(
-            sproutDays = 7,
-            seedlingDays = 20,
-            vegetativeDays = 40,
-            buddingDays = 3,
-            floweringDays = 4,
-            ripeningDays = 7,
+        fun ofScale(scale: Float = 1.0f) = Phases(
+            sproutDays = (7 * scale).roundToInt(),
+            seedlingDays = (20 * scale).roundToInt(),
+            vegetativeDays = (40 * scale).roundToInt(),
+            buddingDays = (3 * scale).roundToInt(),
+            floweringDays = (4 * scale).roundToInt(),
+            ripeningDays = (7 * scale).roundToInt(),
         )
     }
 

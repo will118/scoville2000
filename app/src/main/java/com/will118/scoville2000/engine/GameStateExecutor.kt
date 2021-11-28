@@ -18,6 +18,7 @@ data class SetRightGeneticCross(val plantType: PlantType) : GameOperation
 data class SellDistillate(val distillate: Distillate) : GameOperation
 object ToggleAutoHarvesting : GameOperation
 object ToggleComputation : GameOperation
+object ResetComputation : GameOperation
 data class HarvestOrCompost(val plantPot: PlantPot) : GameOperation
 data class AutoPlantChecked(val plantType: PlantType, val checked: Boolean) : GameOperation
 data class PlantSeed(val seed: Seed) : GameOperation
@@ -36,7 +37,7 @@ class GameStateExecutor(
 ) {
     companion object {
         const val TICK_PERIOD_MS = 250L
-        const val SAVE_PERIOD_MS = 10_000L
+        const val SAVE_PERIOD_MS = 1_000L
     }
 
     private val channel = Channel<GameOperation>(Channel.UNLIMITED)
@@ -45,7 +46,9 @@ class GameStateExecutor(
         when (val operation = channel.receive()) {
             is Save -> {
                 val snapshot = gameState.snapshot()
-                println("save: ${snapshot.hashCode()}")
+                println("save::")
+                snapshot.printHashCodes()
+                print("::")
                 onSaveTick(snapshot)
             }
             is Tick -> {
@@ -69,6 +72,7 @@ class GameStateExecutor(
             is SetRightGeneticCross -> gameState.setRightGeneticsPlantType(operation.plantType)
             is SetFitnessSlider -> gameState.updateFitnessSliders(operation.trait, operation.newValue)
             is ToggleComputation -> gameState.toggleComputation()
+            is ResetComputation -> gameState.resetComputation()
         }
 
         return true
@@ -91,6 +95,7 @@ class GameStateExecutor(
     suspend fun loop(onGameOver: () -> Unit) = coroutineScope {
         while (isActive && !channel.isClosedForReceive) {
             if (!executorLoop()) {
+                println("GAME OVER")
                 timer.cancel()
                 channel.close()
                 onGameOver()

@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -20,8 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.will118.scoville2000.engine.ObjectId
 import com.will118.scoville2000.engine.GameStateExecutor
+import com.will118.scoville2000.engine.ObjectId
 import com.will118.scoville2000.engine.PlantType
 import com.will118.scoville2000.engine.Seed
 import com.will118.scoville2000.ui.theme.Typography
@@ -85,71 +86,101 @@ fun ChilliDex(
                         .clickable { },
                     elevation = 10.dp
                 ) {
-                    Row {
-                        Column(
-                            modifier = Modifier.padding(15.dp)
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
+                            modifier = Modifier.padding(start = 15.dp, top = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            if (plantType != null) {
-                                Row {
-                                    Text(
-                                        text = "${plantType.displayName}",
-                                        style = Typography.h6,
-                                    )
-
-                                    if (autoPlantTechnologyCapable) {
-                                        Spacer(modifier = Modifier.weight(1.0f))
-                                        IconToggleButton(
-                                            checked = plantType.autoPlantChecked,
-                                            onCheckedChange = { autoPlantChecked(plantType, it) }
-                                        ) {
-                                            val tint by animateColorAsState(
-                                                if (plantType.autoPlantChecked)
-                                                    Color(0xFFFF9800)
-                                                else
-                                                    Color(0xFFB0BEC5)
-                                            )
-                                            Icon(
-                                                imageVector = Icons.Filled.Star,
-                                                contentDescription = "Auto plant",
-                                                tint = tint,
-                                            )
-                                        }
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
-                                StatText(
-                                    name = "Scovilles",
-                                    value = plantType.scovilles.toString(),
-                                    size = 12.sp,
-                                )
-                                Spacer(modifier = Modifier.height(5.dp))
-                                StatText(
-                                    name = "Yield",
-                                    value = "${plantType.yield}",
-                                    size = 12.sp,
-                                )
-                                Spacer(modifier = Modifier.height(5.dp))
-                                StatText(
-                                    name = "Cost",
-                                    value = plantType.cost.toString(),
-                                    size = 12.sp,
-                                )
-                            }
-                            else {
+                            if (plantType == null) {
                                 Text(
                                     text = "???",
                                     style = Typography.h6.merge(SpanStyle(color = Color.LightGray)),
                                 )
+                            } else {
+                                Text(
+                                    text = "${plantType.displayName}",
+                                    style = Typography.h6,
+                                )
+
+                                if (autoPlantTechnologyCapable) {
+                                    Spacer(modifier = Modifier.weight(1.0f))
+                                    IconToggleButton(
+                                        checked = plantType.autoPlantChecked,
+                                        onCheckedChange = { autoPlantChecked(plantType, it) }
+                                    ) {
+                                        val tint by animateColorAsState(
+                                            if (plantType.autoPlantChecked)
+                                                Color(0xFFFF9800)
+                                            else
+                                                Color(0xFFB0BEC5)
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Filled.Star,
+                                            contentDescription = "Auto plant",
+                                            tint = tint,
+                                        )
+                                    }
+                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.weight(1.0f))
+                        Row {
+                            Column(
+                                modifier = Modifier
+                                    .padding(15.dp)
+                                    .weight(1.0f)
+                            ) {
+                                if (plantType != null) {
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    StatText(
+                                        name = "Lineage",
+                                        value = plantType.lineage?.let {
+                                            "${it.first.displayName} x ${it.second.displayName}"
+                                        } ?: "Unknown",
+                                        size = 12.sp,
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    StatText(
+                                        name = "Scovilles",
+                                        value = plantType.scovilles.toString(),
+                                        size = 12.sp,
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    StatText(
+                                        name = "Yield",
+                                        value = "${plantType.yield}",
+                                        size = 12.sp,
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    StatText(
+                                        name = "Size",
+                                        value = "${plantType.size}",
+                                        size = 12.sp,
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    StatText(
+                                        name = "Growth Duration",
+                                        value = "%.${2}f".format(plantType.growthDuration),
+                                        size = 12.sp,
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    StatText(
+                                        name = "Cost",
+                                        value = plantType.cost.toString(),
+                                        size = 12.sp,
+                                    )
+                                }
+                            }
 
-                        Box(modifier = Modifier
-                            .width(120.dp)
-                            .aspectRatio(1.0f)) {
-                            plantType.renderIcon()
+                            Box(modifier = Modifier
+                                .height(160.dp)
+                                .padding(bottom = 10.dp, end = 10.dp)
+                                .align(Alignment.CenterVertically)
+                                .aspectRatio(1.0f)) {
+                                plantType.renderIcon()
+                            }
                         }
+
                     }
                 }
             }

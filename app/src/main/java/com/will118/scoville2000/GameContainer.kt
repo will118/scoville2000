@@ -65,5 +65,6 @@ fun GameContainer(
         purchaseTechnology = { gameStateExecutor.enqueueSync(PurchaseTechnology(it)) },
         toggleAutoHarvesting = { gameStateExecutor.enqueueSync(ToggleAutoHarvesting) },
         toggleComputation = { gameStateExecutor.enqueueSync(ToggleComputation) },
+        resetComputation = { gameStateExecutor.enqueueSync(ResetComputation) },
     )
 }

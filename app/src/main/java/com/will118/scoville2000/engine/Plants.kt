@@ -1,6 +1,8 @@
 package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
+import java.lang.Float.max
+import java.lang.Float.min
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.pow
@@ -13,6 +15,7 @@ data class PlantType(
     val chromosome: Chromosome,
     val autoPlantChecked: Boolean = false,
     val id: Int,
+    val lineage: Pair<PlantType, PlantType>? = null,
 ): Describe, Purchasable {
     override val cost = Currency(
         total = chromosome.totalPopCount.toDouble().pow(2.0).toLong()
@@ -28,7 +31,7 @@ data class PlantType(
 
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
-            phases = Phases.DEFAULT,
+            phases = Phases.ofScale(1.0f),
             chromosome = Chromosome(
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom)
             ),
@@ -40,7 +43,7 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 2, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 3, random = geneRandom),
             ),
-            phases = Phases.DEFAULT,
+            phases = Phases.ofScale(0.75f),
             id = 2,
         )
         val Guajillo = PlantType(
@@ -49,7 +52,7 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 3, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
-            phases = Phases.DEFAULT,
+            phases = Phases.ofScale(1.0f),
             id = 3,
         )
         val Jalapeno = PlantType(
@@ -58,7 +61,7 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 4, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
-            phases = Phases.DEFAULT,
+            phases = Phases.ofScale(1.0f),
             id = 4,
         )
         val BirdsEye = PlantType(
@@ -67,7 +70,7 @@ data class PlantType(
                 scovilleCount = Gene.withOneBits(bitCount = 8, random = geneRandom),
                 pepperYield = Gene.withOneBits(bitCount = 1, random = geneRandom),
             ),
-            phases = Phases.DEFAULT,
+            phases = Phases.ofScale(2.5f),
             id = 5,
         )
     }
@@ -75,6 +78,19 @@ data class PlantType(
     val yield: Long
         get() {
             return chromosome.pepperYield.popCount() * 10L
+        }
+
+    val size: Long
+        get() {
+            return 5 + chromosome.pepperSize.popCount().toLong()
+        }
+
+    val growthDuration: Float
+        get() {
+            val power = chromosome.growthDuration.popCount().toFloat() / Gene.MAX
+            val MIN = 0.25f
+            val MAX = 13.00f
+            return max(MIN, min(MAX, (1.0f - power) * MAX))
         }
 
     val scovilles: Scovilles
@@ -95,12 +111,7 @@ data class PlantType(
 
         other as PlantType
 
-        if (displayName != other.displayName) return false
-        // TODO: may want to remove this
-        if (scovilles != other.scovilles) return false
-        if (phases != other.phases) return false
-        // TODO: may want to remove this
-        if (cost != other.cost) return false
+        if (id != other.id) return false
 
         return true
     }
@@ -135,7 +146,7 @@ data class Plant(
 
     fun isDead(currentEpochMillis: Long) = currentPhase(currentEpochMillis) == null
 
-    fun harvest() = 15L * lightStrength * mediumEffectiveness
+    fun harvest() = 3L * plantType.size * lightStrength * mediumEffectiveness
 }
 
 data class Seed(val plantType: PlantType)
