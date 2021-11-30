@@ -17,6 +17,7 @@ class GeneticStateTests {
             isActive = false,
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
+            maxGeneration = 100,
             serializedPopulation = emptyList(),
             random = SerializableRandom.fromSeed(SEED),
         )
@@ -33,6 +34,7 @@ class GeneticStateTests {
             isActive = false,
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
+            maxGeneration = 100,
             serializedPopulation = emptyList(),
             random = SerializableRandom.fromSeed(SEED),
         )
@@ -54,6 +56,7 @@ class GeneticStateTests {
             isActive = false,
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
+            maxGeneration = 200,
             serializedPopulation = emptyList(),
             random = SerializableRandom.fromSeed(SEED),
         )

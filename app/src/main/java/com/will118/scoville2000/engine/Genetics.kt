@@ -3,9 +3,7 @@ package com.will118.scoville2000.engine
 import com.will118.scoville2000.engine.PlantType.Companion.plantId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import java.lang.Integer.min
 import java.util.*
-import kotlin.math.roundToInt
 import kotlin.random.Random
 
 @Serializable
@@ -197,13 +195,13 @@ data class GeneticComputationState(
     val rightPlantType: PlantType,
     val isActive: Boolean,
     val generation: Int,
+    val maxGeneration: Int,
     val fitnessFunctionData: FitnessFunctionData,
     val wasStarted: Boolean = false,
     private val serializedPopulation: List<PlantType>,
     private var random: SerializableRandom = SerializableRandom.fromSeed(),
 ) {
     companion object {
-        const val REQUIRED_FITNESS_IMPROVEMENT_FACTOR = 5.50f // umm
         const val POPULATION_SIZE = 25
 
         fun default() = GeneticComputationState(
@@ -212,6 +210,7 @@ data class GeneticComputationState(
             isActive = false,
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
+            maxGeneration = 100,
             serializedPopulation = emptyList(),
         )
         private fun SerializableRandom.nextGeneIndex() = this.nextInt(0, 64) // 0..63
@@ -222,6 +221,14 @@ data class GeneticComputationState(
         { it.chromosome.fitness(fitnessFunctionData) },
         { it.id }
     )).also { it.addAll(serializedPopulation) }
+
+    init {
+        repeat(POPULATION_SIZE - population.size) {
+            population.add(
+                cross(leftPlantType, rightPlantType, random.nextGeneIndex())
+            )
+        }
+    }
 
     // Used to clean up the least fit (n.b. it will be the argument if that is the least fit)
     private fun swapIntoPopulation(plantType: PlantType) {
@@ -254,13 +261,6 @@ data class GeneticComputationState(
 
     fun tickGenerations(n: Int): GeneticComputationState {
         for (i in 0 until n) {
-            if (population.size < 10) {
-                population.add(
-                    cross(leftPlantType, rightPlantType, random.nextGeneIndex())
-                )
-                continue
-            }
-
             // we should be able to remove things from the pq without the UI updating
             val fittest = population.pollLast()
             val secondFittest = population.pollLast()
@@ -286,15 +286,7 @@ data class GeneticComputationState(
     // Let's hope we know best...
     override fun hashCode(): Int = generation
 
-    fun progress(): Int {
-        if (population.size == 0) return 0
-
-        val range = targetFitnessValue - originalFitnessValue
-        val topFitnessValue = population.last()!!.chromosome.fitness(fitnessFunctionData)
-        val progress = (topFitnessValue / range) * 100
-
-        return min(100, progress.roundToInt())
-    }
+    fun progress() = (generation.toFloat() / maxGeneration) * 100
 
     fun final(): PlantType {
         val fittest = population.last()
@@ -307,13 +299,6 @@ data class GeneticComputationState(
             isDefault = false,
         )
     }
-
-    private val originalFitnessValue =
-        leftPlantType.chromosome.fitness(fitnessFunctionData)
-            .plus(rightPlantType.chromosome.fitness(fitnessFunctionData))
-            .div(2)
-
-    private val targetFitnessValue = originalFitnessValue * REQUIRED_FITNESS_IMPROVEMENT_FACTOR
 
     fun snapshot(): GeneticComputationState {
         return this.copy(serializedPopulation = population.toList())

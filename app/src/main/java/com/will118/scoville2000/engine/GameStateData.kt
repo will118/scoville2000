@@ -18,14 +18,14 @@ data class ObjectId(val hi: Long, val lo: Long) {
 @Serializable
 data class GameStateData(
     val id: ObjectId = ObjectId.random(),
-//    var balance: Currency = Currency(80),
-    var balance: Currency = Currency(80000000000000000),
+    var balance: Currency = Currency(80),
+//    var balance: Currency = Currency(80000000000000000),
     var area: Area = Area.WindowSill,
     var light: Light = Light.Ambient,
     var medium: Medium = Medium.Soil,
     var tool: Tool = Tool.None,
-//    var technologyLevel: TechnologyLevel = TechnologyLevel.None,
-    var technologyLevel: TechnologyLevel = TechnologyLevel.Quantum,
+    var technologyLevel: TechnologyLevel = TechnologyLevel.None,
+//    var technologyLevel: TechnologyLevel = TechnologyLevel.Quantum,
     var autoHarvestEnabled: Boolean = false,
     var milliCounter: Long = 0, // Used for calculating costs
     val epochMillis: Long = Instant.now().toEpochMilli(), // Used to determine progression

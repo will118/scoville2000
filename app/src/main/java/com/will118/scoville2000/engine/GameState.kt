@@ -19,10 +19,11 @@ data class StockLevel(val quantity: Long) {
 @Serializable
 data class FractionalStockLevel(val quantity: Long, val thousandths: Int) {
     override fun toString(): String {
-        if (thousandths == 1000 || thousandths == 0) {
-            return "${quantity + 1}.00"
+        return when (thousandths) {
+            1000 -> "${quantity + 1}.00"
+            0 -> "${quantity}.00"
+            else -> "${quantity}.${thousandths / 10}"
         }
-        return "${quantity}.${thousandths / 10}"
     }
 }
 
@@ -478,7 +479,7 @@ class GameState(private val data: GameStateData) {
 
     private fun runGenetics() {
         val nextGeneration = _geneticComputationState.value.tickGenerations(n = 1)
-        if (nextGeneration.progress() == 100) {
+        if (nextGeneration.progress() == 100f) {
             onGeneticsComplete(nextGeneration.final())
         } else {
             _geneticComputationState.value = nextGeneration
@@ -570,7 +571,7 @@ class GameState(private val data: GameStateData) {
                 }
             }
 
-//            progressionStack.tryPop()
+            progressionStack.tryPop()
             plantTypeStack.tryPop()
 
             maybeRunGenetics()

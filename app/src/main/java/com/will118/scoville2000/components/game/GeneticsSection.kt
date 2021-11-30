@@ -36,9 +36,10 @@ fun GeneticsSection(
     )
 
     val progress = geneticComputationState.progress()
+    println(progress)
 
     val animatedProgress = animateFloatAsState(
-        targetValue = progress.toFloat(),
+        targetValue = progress,
         animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
     ).value
 
