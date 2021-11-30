@@ -64,9 +64,14 @@ class GameState(private val data: GameStateData) {
     // These need to be idempotent as not persisted.
     private val progressionStack = mutableListOf(
         techProgression(
+            targetLevel = TechnologyLevel.Amateur,
+            millisElapsed = MILLIS_PER_MONTH,
+            condition = { _area.value.dimension >= 4 },
+        ),
+        techProgression(
             targetLevel = TechnologyLevel.Basic,
             millisElapsed = MILLIS_PER_MONTH,
-            condition = { true },
+            condition = { _tool.value == Tool.Scythe },
         ),
         techProgression(
             targetLevel = TechnologyLevel.Intermediate,

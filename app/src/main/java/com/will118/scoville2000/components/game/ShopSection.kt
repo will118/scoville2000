@@ -112,7 +112,7 @@ fun ShopSection(
         Text(text = "Shop", style = Typography.h5)
         Spacer(modifier = Modifier.height(10.dp))
 
-        if (currentTechnologies.contains(Technology.ChimoleonGenetics)) {
+        if (currentTechnologies.contains(Technology.Chillidex)) {
             Button(
                 onClick = { navigateToChilliDex() },
             ) {
