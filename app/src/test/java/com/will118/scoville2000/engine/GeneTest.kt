@@ -17,7 +17,6 @@ class GeneTest {
 
         val plantType = PlantType(
             displayName = "",
-            phases = Phases.DEFAULT,
             chromosome = Chromosome(
                 scovilleCount = gene,
             ),

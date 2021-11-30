@@ -394,7 +394,7 @@ class GameState(private val data: GameStateData) {
 
     fun distill(distillate: Distillate) {
         val totalScovilles = _pepperInventory.entries
-            .sumOf { it.key.scovilles.count * it.value.quantity }
+            .sumOf { it.key.scovilles.count * it.value.quantity * it.key.size }
 
         if (totalScovilles < distillate.requiredScovilles.count) {
             return
@@ -405,7 +405,7 @@ class GameState(private val data: GameStateData) {
         loop@for (plantType in _pepperInventory.keys) {
             val stock = _pepperInventory[plantType]!!
             for (consumed in 1..stock.quantity) {
-                requiredScovilles -= plantType.scovilles.count
+                requiredScovilles -= (plantType.scovilles.count * plantType.size)
                 if (requiredScovilles <= 0) {
                     _pepperInventory[plantType] = StockLevel(
                         quantity = stock.quantity - consumed
@@ -464,13 +464,20 @@ class GameState(private val data: GameStateData) {
     }
 
     private fun onGeneticsComplete(newPlantType: PlantType) {
-        println("Genetics complete")
-        _plantTypes.add(newPlantType)
+        val existing = _plantTypes.firstOrNull { it.displayName == newPlantType.displayName }
+
+        if (existing != null) {
+            // drop it
+            // TODO: maybe compare fitness
+        } else {
+            _plantTypes.add(newPlantType)
+        }
+
         _geneticComputationState.value = GeneticComputationState.default()
     }
 
     private fun runGenetics() {
-        val nextGeneration = _geneticComputationState.value.tickGenerations(n = 10)
+        val nextGeneration = _geneticComputationState.value.tickGenerations(n = 1)
         if (nextGeneration.progress() == 100) {
             onGeneticsComplete(nextGeneration.final())
         } else {

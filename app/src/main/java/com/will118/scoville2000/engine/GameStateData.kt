@@ -49,8 +49,6 @@ data class GameStateData(
         "   plantTypes: ${plantTypes.hashCode()}\n" +
         "   tech: ${technologies.hashCode()}\n" +
         "   distillate: ${distillateInventory.hashCode()}\n" +
-//        "   plantTypes: ${plantTypes.hashCode()}\n" +
-//        "   plantTypes: ${plantTypes.hashCode()}\n" +
         "   plantTypes: ${plantTypes.hashCode()}\n"
         )
     }

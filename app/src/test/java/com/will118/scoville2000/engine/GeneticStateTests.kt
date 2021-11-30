@@ -21,6 +21,7 @@ class GeneticStateTests {
             random = SerializableRandom.fromSeed(SEED),
         )
 
+        state = state.tickGenerations(25)
         assertEquals(GeneticComputationState.POPULATION_SIZE, state.population.size)
     }
 
@@ -59,7 +60,7 @@ class GeneticStateTests {
 
         assertEquals(0, state.progress())
 
-        state = state.tickGenerations(50)
+        state = state.tickGenerations(10)
 
         assertEquals(49, state.progress())
 

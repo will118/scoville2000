@@ -22,18 +22,19 @@ data class Gene(
     val hi: ULong,
 ) {
     companion object {
-        const val MAX = ULong.SIZE_BITS + ULong.SIZE_BITS
+        const val SIZE_BITS = ULong.SIZE_BITS + ULong.SIZE_BITS
 
         fun withOneBits(bitCount: Int, random: Random = Random.Default) =
-            generateSequence { random.nextInt(0, 63) }
+            sequence { for (i in 0 until 64) { yield(true to i); yield(false to i) } }
+                .shuffled(random)
                 .distinct()
                 .take(bitCount)
-                .withIndex()
                 .fold(Gene(lo = 0UL, hi = 0UL)) { acc, indexedValue ->
-                    if (indexedValue.index % 2 == 0)
-                        acc.copy(lo = acc.lo.or((1UL).shl(indexedValue.value)) )
+                    val num = indexedValue.second
+                    if (indexedValue.first)
+                        acc.copy(lo = acc.lo.or((1UL).shl(num)) )
                     else
-                        acc.copy(hi = acc.hi.or((1UL).shl(indexedValue.value)) )
+                        acc.copy(hi = acc.hi.or((1UL).shl(num)) )
                 }
     }
 
@@ -74,6 +75,10 @@ data class Chromosome(
     val pepperSize: Gene = emptyGene,
     val growthDuration: Gene = emptyGene,
 ) {
+    companion object {
+        const val TOTAL_BITS = Gene.SIZE_BITS * 4
+    }
+
     val totalPopCount = pepperSize.popCount()
         .plus(pepperYield.popCount())
         .plus(scovilleCount.popCount())
@@ -198,7 +203,7 @@ data class GeneticComputationState(
     private var random: SerializableRandom = SerializableRandom.fromSeed(),
 ) {
     companion object {
-        const val REQUIRED_FITNESS_IMPROVEMENT_FACTOR = 15.0f // umm
+        const val REQUIRED_FITNESS_IMPROVEMENT_FACTOR = 5.50f // umm
         const val POPULATION_SIZE = 25
 
         fun default() = GeneticComputationState(
@@ -293,24 +298,14 @@ data class GeneticComputationState(
 
     fun final(): PlantType {
         val fittest = population.last()
-        val name = nameCross(
-            leftPlantType = leftPlantType,
-            rightPlantType = rightPlantType,
-            strength = fittest.chromosome.totalPopCount,
-        )
+        val name = nameCross(fittest.chromosome)
         return fittest.copy(
             lineage = Pair(leftPlantType, rightPlantType),
             displayName = name,
             id = random.plantId(),
+            autoPlantChecked = false,
+            isDefault = false,
         )
-    }
-
-    private fun nameCross(
-        leftPlantType: PlantType,
-        rightPlantType: PlantType,
-        strength: Int
-    ): String {
-        return "California Reaper"
     }
 
     private val originalFitnessValue =

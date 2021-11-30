@@ -1,12 +1,12 @@
 package com.will118.scoville2000.engine
 
 import kotlinx.serialization.Serializable
-import java.lang.Float.max
-import java.lang.Float.min
 import java.time.Duration
 import java.time.Instant
+import kotlin.math.max
 import kotlin.math.pow
 import kotlin.random.Random
+import java.lang.Float.max as floatMax
 
 @Serializable
 data class PlantType(
@@ -15,16 +15,15 @@ data class PlantType(
     val autoPlantChecked: Boolean = false,
     val id: Int,
     val lineage: Pair<PlantType, PlantType>? = null,
+    val isDefault: Boolean = false,
 ): Describe, Purchasable {
     override val cost = Currency(
         total = chromosome.totalPopCount.toDouble().pow(2.0).toLong()
     )
 
     companion object {
-        // TODO: would be nice to derive from code
-        const val TOTAL_PEPPER_TYPES = 99
+        val TOTAL_PEPPER_TYPES = 5 + NAMES.totalCombinations
         private const val MIN_GROWTH = 0.25f
-        private const val MAX_GROWTH = 13.00f
 
         fun SerializableRandom.plantId() = this.nextInt(5, Int.MAX_VALUE)
 
@@ -33,9 +32,10 @@ data class PlantType(
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
             chromosome = Chromosome(
-                pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom)
+                pepperYield = Gene.withOneBits(bitCount = 4, random = geneRandom)
             ),
             id = 1,
+            isDefault = true,
         )
         val Poblano = PlantType(
             displayName = "Poblano",
@@ -44,6 +44,7 @@ data class PlantType(
                 pepperYield = Gene.withOneBits(bitCount = 3, random = geneRandom),
             ),
             id = 2,
+            isDefault = true,
         )
         val Guajillo = PlantType(
             displayName = "Guajillo",
@@ -52,6 +53,7 @@ data class PlantType(
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
             id = 3,
+            isDefault = true,
         )
         val Jalapeno = PlantType(
             displayName = "Jalapeño",
@@ -60,6 +62,7 @@ data class PlantType(
                 pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
             ),
             id = 4,
+            isDefault = true,
         )
         val BirdsEye = PlantType(
             displayName = "Bird's Eye",
@@ -68,13 +71,14 @@ data class PlantType(
                 pepperYield = Gene.withOneBits(bitCount = 1, random = geneRandom),
             ),
             id = 5,
+            isDefault = true,
         )
     }
 
     private val growthDuration: Float
         get() {
-            val power = chromosome.growthDuration.popCount().toFloat() / Gene.MAX
-            return max(MIN_GROWTH, min(MAX_GROWTH, (1.0f - power) * MAX_GROWTH))
+            val power = chromosome.growthDuration.popCount().toFloat() / Gene.SIZE_BITS
+            return floatMax(MIN_GROWTH, 1.0f - power)
         }
 
     val phases = Phases.ofScale(growthDuration)
@@ -86,7 +90,7 @@ data class PlantType(
 
     val size: Long
         get() {
-            return 5 + chromosome.pepperSize.popCount().toLong()
+            return max(1, chromosome.pepperSize.popCount().toLong())
         }
 
     val scovilles: Scovilles
@@ -142,7 +146,7 @@ data class Plant(
 
     fun isDead(currentEpochMillis: Long) = currentPhase(currentEpochMillis) == null
 
-    fun harvest() = 3L * plantType.size * lightStrength * mediumEffectiveness
+    fun harvest() = plantType.yield * lightStrength * mediumEffectiveness
 }
 
 data class Seed(val plantType: PlantType)
