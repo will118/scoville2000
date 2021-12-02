@@ -16,17 +16,17 @@ enum class Area(
     Bedroom(
         dimension = 2,
         displayName = "Bedroom",
-        cost = Currency(50_000),
+        cost = Currency(5_000),
     ),
     SpareRoom(
         dimension = 4,
         displayName = "Spare Room",
-        cost = Currency(600_000)
+        cost = Currency(50_000)
     ),
     Apartment(
         dimension = 8,
         displayName = "Apartment",
-        cost = Currency(1_300_000)
+        cost = Currency(1_000_000)
     ),
     Warehouse(
         dimension = 16,

@@ -45,13 +45,13 @@ class GameState(private val data: GameStateData) {
 
     private fun techProgression(
         targetLevel: TechnologyLevel,
-        millisElapsed: Long,
+        millisElapsed: Long? = null,
         condition: () -> Boolean,
     ): () -> Boolean {
         return {
             when {
                 data.technologyLevel == targetLevel -> true
-                data.dateMillis - data.epochMillis > millisElapsed && condition() -> {
+                (millisElapsed?.let { it < data.dateMillis - data.epochMillis } ?: true) && condition() -> {
                     data.technologyLevel = targetLevel
                     _technologyLevel.value = targetLevel
                     true
@@ -70,35 +70,31 @@ class GameState(private val data: GameStateData) {
         ),
         techProgression(
             targetLevel = TechnologyLevel.Basic,
-            millisElapsed = MILLIS_PER_MONTH,
             condition = { _tool.value == Tool.Scythe },
         ),
         techProgression(
             targetLevel = TechnologyLevel.Intermediate,
-            millisElapsed =  12 * MILLIS_PER_MONTH,
-            condition = { true },
+            condition = { _technologies.contains(Technology.AutoHarvester) },
         ),
         techProgression(
             targetLevel = TechnologyLevel.Advanced,
-            millisElapsed =  5 * 12 * MILLIS_PER_MONTH,
-            condition = { true },
+            condition = { _technologies.contains(Technology.ScovilleDistillery) },
         ),
         techProgression(
             targetLevel = TechnologyLevel.Quantum,
-            millisElapsed =  10 * 12 * MILLIS_PER_MONTH,
-            condition = { true },
+            condition = { _technologies.contains(Technology.ChimoleonGenetics) },
         ),
     )
 
     private fun plantTypeProgression(
         plantType: PlantType,
-        millisElapsed: Long,
+        millisElapsed: Long? = null,
         condition: () -> Boolean,
     ): () -> Boolean {
         return {
             when {
                 _plantTypes.contains(plantType) -> true
-                data.dateMillis - data.epochMillis > millisElapsed && condition() -> {
+                (millisElapsed?.let { it < data.dateMillis - data.epochMillis } ?: true) && condition() -> {
                     _plantTypes.add(plantType)
                     true
                 }
@@ -110,23 +106,19 @@ class GameState(private val data: GameStateData) {
     private val plantTypeStack = mutableListOf(
         plantTypeProgression(
             plantType = PlantType.Poblano,
-            millisElapsed = MILLIS_PER_DAY,
             condition = { true },
         ),
         plantTypeProgression(
             plantType = PlantType.Guajillo,
-            millisElapsed = MILLIS_PER_WEEK,
-            condition = { true },
+            condition = { _light.value.ordinal >= Light.CFL.ordinal },
         ),
         plantTypeProgression(
             plantType = PlantType.Jalapeno,
-            millisElapsed = 3 * MILLIS_PER_WEEK,
-            condition = { true },
+            condition = { _area.value.ordinal >= Area.Bedroom.ordinal },
         ),
         plantTypeProgression(
             plantType = PlantType.BirdsEye,
-            millisElapsed = 2 * MILLIS_PER_MONTH,
-            condition = { true },
+            condition = { _area.value.ordinal >= Area.SpareRoom.ordinal },
         ),
     )
 
@@ -174,7 +166,7 @@ class GameState(private val data: GameStateData) {
     private val _geneticComputationState = mutableStateOf(data.geneticComputationState)
     val geneticComputationState: State<GeneticComputationState> by ::_geneticComputationState
 
-    var buyer = Buyer.Friends
+    var buyer = Membership.Friends
         private set
 
     val id: ObjectId

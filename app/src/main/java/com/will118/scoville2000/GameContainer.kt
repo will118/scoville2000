@@ -31,7 +31,7 @@ fun GameContainer(
     Game(
         area = gameState.area.value,
         balance = balance.value,
-        buyer = gameState.buyer,
+        membership = gameState.buyer,
         dateMillis = dateMillis.value,
         light = gameState.light.value,
         medium = gameState.medium.value,

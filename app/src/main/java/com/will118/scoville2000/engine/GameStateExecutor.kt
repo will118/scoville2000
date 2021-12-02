@@ -36,7 +36,7 @@ class GameStateExecutor(
     private val onSaveTick: suspend (GameStateData) -> Unit,
 ) {
     companion object {
-        const val TICK_PERIOD_MS = 250L
+        const val TICK_PERIOD_MS = 200L
         const val SAVE_PERIOD_MS = 1_000L
     }
 
@@ -75,16 +75,30 @@ class GameStateExecutor(
         return true
     }
 
+    private var paused = false
+
+    fun pause() {
+        paused = true
+    }
+
+    fun unpause() {
+        paused = false
+    }
+
     private val timer = Timer().also {
         it.scheduleAtFixedRate(delay = 0, period = TICK_PERIOD_MS) {
-            runBlocking {
-                channel.send(Tick)
+            if (!paused) {
+                runBlocking {
+                    channel.send(Tick)
+                }
             }
         }
 
         it.scheduleAtFixedRate(delay = SAVE_PERIOD_MS, period = SAVE_PERIOD_MS) {
-            runBlocking {
-                channel.send(Save)
+            if (!paused) {
+                runBlocking {
+                    channel.send(Save)
+                }
             }
         }
     }

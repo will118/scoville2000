@@ -23,7 +23,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 fun Game(
     area: Area,
     balance: Currency,
-    buyer: Buyer,
+    membership: Membership,
     dateMillis: Long,
     light: Light,
     medium: Medium,
@@ -81,12 +81,12 @@ fun Game(
             sellPeppers = sellPeppers,
         )
         Divider(modifier = dividerPadding)
-        StatSection(
+        InfoSection(
             balance = balance,
             dateMillis = dateMillis,
             light = light,
             medium = medium,
-            buyer = buyer,
+            membership = membership,
             technologies = technologies,
         )
         Divider(modifier = dividerPadding)

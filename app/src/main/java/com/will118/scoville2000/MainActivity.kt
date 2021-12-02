@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -19,6 +20,7 @@ import androidx.datastore.dataStore
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.will118.scoville2000.components.ChilliDex
 import com.will118.scoville2000.components.gameover.GameOver
 import com.will118.scoville2000.engine.*
@@ -47,6 +49,9 @@ class MainActivity : ComponentActivity() {
 
     private data class RunningGame(val state: GameState, val executor: GameStateExecutor)
 
+    private var pauseGame: () -> Unit = { }
+    private var unpauseGame: () -> Unit = { }
+
     private fun createRunningGame(): RunningGame {
         val gameStateData = runBlocking {
             applicationContext.dataStore.data.first()
@@ -62,7 +67,20 @@ class MainActivity : ComponentActivity() {
             },
         )
 
+        pauseGame = gameStateExecutor::pause
+        unpauseGame = gameStateExecutor::unpause
+
         return RunningGame(state = gameState, executor = gameStateExecutor)
+    }
+
+    override fun onStop() {
+        pauseGame()
+        super.onStop()
+    }
+
+    override fun onRestart() {
+        unpauseGame()
+        super.onRestart()
     }
 
     @OptIn(ExperimentalComposeUiApi::class)
@@ -71,11 +89,19 @@ class MainActivity : ComponentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setContent {
+            val systemUiController = rememberSystemUiController()
+
             val navController = rememberNavController()
 
             val (game, updateGame) = remember { mutableStateOf(createRunningGame()) }
 
             Gt2000Theme {
+                val color = MaterialTheme.colors.secondary
+
+                SideEffect {
+                    systemUiController.setStatusBarColor(color = color)
+                }
+
                 Surface(color = MaterialTheme.colors.background) {
                     NavHost(
                         navController = navController,

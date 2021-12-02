@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -40,6 +41,7 @@ fun PlantGrid(
     onPlantPotTap: (PlantPot) -> Unit,
 ) {
     val areaWrapper = rememberUpdatedState(newValue = area)
+    val borderColor = MaterialTheme.colors.primary
     // cf. Mondrian
     Canvas(modifier = Modifier
         .fillMaxWidth()
@@ -63,51 +65,51 @@ fun PlantGrid(
         drawLine(
             start = Offset(x = 0f, y = 0f),
             end = Offset(x = 0f, y = canvasHeight),
-            color = Color.Blue,
+            color = borderColor,
             strokeWidth = 5.5f
         )
 
         drawLine(
             start = Offset(x = 0f, y = canvasHeight),
             end = Offset(x = canvasWidth, y = canvasHeight),
-            color = Color.Blue,
+            color = borderColor,
             strokeWidth = 5.5f
         )
 
         drawLine(
             start = Offset(x = canvasWidth, y = canvasHeight),
             end = Offset(x = canvasWidth, y = 0f),
-            color = Color.Blue,
+            color = borderColor,
             strokeWidth = 5.5f
         )
 
         drawLine(
             start = Offset(x = canvasWidth, y = 0f),
             end = Offset(x = 0f, y = 0f),
-            color = Color.Blue,
+            color = borderColor,
             strokeWidth = 5.5f
         )
 
         val lines = Integer.max(1, area.dimension)
         val step = canvasHeight / lines
-        val gridStrokeWidth = if (lines >= 32) 1f else 4f
+//        val gridStrokeWidth = if (lines >= 32) 1f else 4f
 
-        for (i in (1 until lines)) {
-            val offset = step * i
-            drawLine(
-                start = Offset(x = 0f, y = offset),
-                end = Offset(x = canvasWidth, y = offset),
-                color = Color.Black,
-                strokeWidth = gridStrokeWidth
-            )
-
-            drawLine(
-                start = Offset(x = offset, y = 0f),
-                end = Offset(x = offset, y = canvasHeight),
-                color = Color.Black,
-                strokeWidth = gridStrokeWidth
-            )
-        }
+//        for (i in (1 until lines)) {
+//            val offset = step * i
+//            drawLine(
+//                start = Offset(x = 0f, y = offset),
+//                end = Offset(x = canvasWidth, y = offset),
+//                color = Color.Black,
+//                strokeWidth = gridStrokeWidth
+//            )
+//
+//            drawLine(
+//                start = Offset(x = offset, y = 0f),
+//                end = Offset(x = offset, y = canvasHeight),
+//                color = Color.Black,
+//                strokeWidth = gridStrokeWidth
+//            )
+//        }
 
         for (plantPot in plantPots.withIndex().filter { it.value.plant != null }) {
             drawRect(

@@ -18,12 +18,12 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 @Composable
-fun StatSection(
+fun InfoSection(
     balance: Currency,
     dateMillis: Long,
     light: Light,
     medium: Medium,
-    buyer: Buyer,
+    membership: Membership,
     technologies: SnapshotStateList<Technology>,
 ) {
     val dateTime = OffsetDateTime.ofInstant(
@@ -48,17 +48,17 @@ fun StatSection(
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
             name = "Light source",
-            value = light.name,
+            value = light.displayName,
         )
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
             name = "Growth medium",
-            value = medium.name,
+            value = medium.displayName,
         )
         Spacer(modifier = Modifier.height(10.dp))
         StatText(
             name = "Price",
-            value = "${buyer.pricePerScoville}/milliscoville (${buyer.displayName})",
+            value = "${membership.pricePerScoville}/milliscoville (${membership.displayName})",
         )
         if (autoPlanters > 0) {
             Spacer(modifier = Modifier.height(10.dp))

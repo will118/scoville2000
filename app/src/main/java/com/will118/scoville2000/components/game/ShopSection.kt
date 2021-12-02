@@ -73,6 +73,7 @@ private fun SeedTable(
 fun ShopSection(
     currentLight: Light,
     currentArea: Area,
+    currentMemberships: Membership,
     currentMedium: Medium,
     currentTool: Tool,
     currentTechnologies: SnapshotStateList<Technology>,
@@ -154,11 +155,25 @@ fun ShopSection(
             buttonText = "Upgrade",
             onClick = upgradeArea,
         )
+        if (currentArea.ordinal >= Area.Apartment.ordinal) {
+            product(
+                header = "Tools",
+                products = Tool.values().dropWhile { it.ordinal <= currentTool.ordinal },
+                buttonText = "Upgrade",
+                onClick = upgradeTool,
+            )
+        }
         product(
-            header = "Tools",
-            products = Tool.values().dropWhile { it.ordinal <= currentTool.ordinal },
+            header = "Area",
+            products = currentArea.upgrades,
             buttonText = "Upgrade",
-            onClick = upgradeTool,
+            onClick = upgradeArea,
+        )
+        product(
+            header = "Membership",
+            products = currentMembership.upgrades,
+            buttonText = "Upgrade",
+            onClick = upgradeMembership,
         )
     }
 }

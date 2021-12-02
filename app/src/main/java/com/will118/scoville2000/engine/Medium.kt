@@ -18,14 +18,14 @@ enum class Medium(
     SoilPerlite(
         effectiveness = 3,
         litresPerCostTick = 1,
-        displayName = "Soil + Perlite",
-        cost = Currency(1_000),
+        displayName = "Soil & Perlite",
+        cost = Currency(500),
     ),
     Hydroponics(
         effectiveness = 5,
         litresPerCostTick = 1,
         displayName = "Hydroponics",
-        cost = Currency(200_000),
+        cost = Currency(50_000),
     );
 
     override val upgrades: List<Medium>

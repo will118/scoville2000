@@ -40,16 +40,4 @@ data class GameStateData(
         PlantType.BellPepper,
     ),
     val geneticComputationState: GeneticComputationState = GeneticComputationState.default()
-) {
-    fun printHashCodes() {
-        println(
-        "   snap: ${hashCode()}\n" +
-        "   inventory: ${pepperInventory.size}\n" +
-        "   geneticState: ${geneticComputationState.hashCode()}\n" +
-        "   plantTypes: ${plantTypes.hashCode()}\n" +
-        "   tech: ${technologies.hashCode()}\n" +
-        "   distillate: ${distillateInventory.hashCode()}\n" +
-        "   plantTypes: ${plantTypes.hashCode()}\n"
-        )
-    }
-}
+)
