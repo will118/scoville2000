@@ -31,7 +31,7 @@ fun GameContainer(
     Game(
         area = gameState.area.value,
         balance = balance.value,
-        membership = gameState.buyer,
+        membership = gameState.membership.value,
         dateMillis = dateMillis.value,
         light = gameState.light.value,
         medium = gameState.medium.value,
@@ -66,5 +66,6 @@ fun GameContainer(
         toggleAutoHarvesting = { gameStateExecutor.enqueueSync(ToggleAutoHarvesting) },
         toggleComputation = { gameStateExecutor.enqueueSync(ToggleComputation) },
         resetComputation = { gameStateExecutor.enqueueSync(ResetComputation) },
+        upgradeMembership = { gameStateExecutor.enqueueSync(UpgradeMembership(it)) }
     )
 }

@@ -142,22 +142,26 @@ fun GeneticsSection(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             onClick = toggleComputation,
         ) {
-            Text(
-                text = if (geneticComputationState.isActive) "PAUSE" else "START",
-            )
+            val text = when {
+                geneticComputationState.isActive -> "PAUSE"
+                geneticComputationState.wasStarted -> "RESUME"
+                else -> "START"
+            }
+
+            Text(text = text)
         }
 
-        if (!geneticComputationState.isActive && geneticComputationState.wasStarted) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Button(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                onClick = resetComputation,
-            ) {
-                Text(
-                    text = "RESET"
-                )
-            }
-        }
+//        if (!geneticComputationState.isActive && geneticComputationState.wasStarted) {
+//            Spacer(modifier = Modifier.height(10.dp))
+//            Button(
+//                modifier = Modifier.align(Alignment.CenterHorizontally),
+//                onClick = resetComputation,
+//            ) {
+//                Text(
+//                    text = "RESET"
+//                )
+//            }
+//        }
     }
 }
 

@@ -73,7 +73,7 @@ private fun SeedTable(
 fun ShopSection(
     currentLight: Light,
     currentArea: Area,
-    currentMemberships: Membership,
+    currentMembership: Membership,
     currentMedium: Medium,
     currentTool: Tool,
     currentTechnologies: SnapshotStateList<Technology>,
@@ -84,6 +84,7 @@ fun ShopSection(
     upgradeLight: (Light) -> Unit,
     upgradeMedium: (Medium) -> Unit,
     upgradeArea: (Area) -> Unit,
+    upgradeMembership: (Membership) -> Unit,
     upgradeTool: (Tool) -> Unit,
 ) {
     @Composable
@@ -163,17 +164,13 @@ fun ShopSection(
                 onClick = upgradeTool,
             )
         }
-        product(
-            header = "Area",
-            products = currentArea.upgrades,
-            buttonText = "Upgrade",
-            onClick = upgradeArea,
-        )
-        product(
-            header = "Membership",
-            products = currentMembership.upgrades,
-            buttonText = "Upgrade",
-            onClick = upgradeMembership,
-        )
+        if (currentArea.ordinal >= Area.SpareRoom.ordinal) {
+            product(
+                header = "Membership",
+                products = currentMembership.upgrades,
+                buttonText = "Upgrade",
+                onClick = upgradeMembership,
+            )
+        }
     }
 }

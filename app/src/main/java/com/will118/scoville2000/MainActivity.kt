@@ -2,6 +2,7 @@ package com.will118.scoville2000
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.Serializer
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.dataStore
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -44,7 +46,9 @@ import java.io.OutputStream
 class MainActivity : ComponentActivity() {
     private val Context.dataStore: DataStore<GameStateData> by dataStore(
         "game-state-data",
-        serializer = GameStateDataSerializer
+        serializer = GameStateDataSerializer,
+        // make sure to handle schema migrations xD
+        corruptionHandler = ReplaceFileCorruptionHandler { GameStateData() }
     )
 
     private data class RunningGame(val state: GameState, val executor: GameStateExecutor)
@@ -162,16 +166,22 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+fun ByteArray.toHex(): String =
+    asUByteArray().joinToString("") { it.toString(radix = 16).padStart(2, '0') }
+
 @ExperimentalSerializationApi
 object GameStateDataSerializer : Serializer<GameStateData> {
     override val defaultValue = GameStateData()
 
     override suspend fun readFrom(input: InputStream): GameStateData {
+        var bytes = ByteArray(10)
         try {
             return input.use {
-                ProtoBuf.decodeFromByteArray(it.readBytes())
+                bytes = it.readBytes()
+                ProtoBuf.decodeFromByteArray(bytes)
             }
         } catch (e: Exception) {
+            Log.e("SaveLoader", bytes.toHex())
             throw CorruptionException("Unable to read GameState", e)
         }
     }

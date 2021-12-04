@@ -46,6 +46,7 @@ fun Game(
     upgradeArea: (Area) -> Unit,
     upgradeMedium: (Medium) -> Unit,
     upgradeLight: (Light) -> Unit,
+    upgradeMembership: (Membership) -> Unit,
     upgradeTool: (Tool) -> Unit,
     updateFitnessSlider: (GeneticTrait, Float) -> Unit,
     plantSeed: (Seed) -> Unit,
@@ -94,6 +95,7 @@ fun Game(
             currentLight = light,
             currentArea = area,
             currentMedium = medium,
+            currentMembership = membership,
             currentTool = tool,
             currentTechnologies = technologies,
             currentPlantTypes = plantTypes,
@@ -102,6 +104,7 @@ fun Game(
             autoPlantChecked = autoPlantChecked,
             upgradeLight = upgradeLight,
             upgradeMedium = upgradeMedium,
+            upgradeMembership = upgradeMembership,
             upgradeArea = upgradeArea,
             upgradeTool = upgradeTool,
         )

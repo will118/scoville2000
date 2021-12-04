@@ -210,7 +210,7 @@ data class GeneticComputationState(
             isActive = false,
             fitnessFunctionData = FitnessFunctionData(),
             generation = 0,
-            maxGeneration = 100,
+            maxGeneration = 50,
             serializedPopulation = emptyList(),
         )
         private fun SerializableRandom.nextGeneIndex() = this.nextInt(0, 64) // 0..63

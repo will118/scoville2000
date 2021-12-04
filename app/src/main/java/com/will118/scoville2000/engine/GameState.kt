@@ -37,7 +37,7 @@ fun MutableList<() -> Boolean>.tryPop() {
 
 class GameState(private val data: GameStateData) {
     private companion object {
-        val MILLIS_PER_TICK = Duration.ofHours(6).toMillis()
+        val MILLIS_PER_TICK = Duration.ofHours(8).toMillis()
         val MILLIS_PER_DAY = Duration.ofDays(1).toMillis()
         val MILLIS_PER_WEEK = Duration.ofDays(7).toMillis()
         val MILLIS_PER_MONTH = Duration.ofDays(31).toMillis()
@@ -152,6 +152,9 @@ class GameState(private val data: GameStateData) {
     private val _tool = mutableStateOf(data.tool)
     val tool: State<Tool> by ::_tool
 
+    private val _qcapsPurchased = mutableStateOf(data.qcapsPurchased)
+    val qcapsPurchased: State<Long> by ::_qcapsPurchased
+
     private val _technologyLevel = mutableStateOf(data.technologyLevel)
     val technologyLevel: State<TechnologyLevel> by ::_technologyLevel
 
@@ -166,8 +169,8 @@ class GameState(private val data: GameStateData) {
     private val _geneticComputationState = mutableStateOf(data.geneticComputationState)
     val geneticComputationState: State<GeneticComputationState> by ::_geneticComputationState
 
-    var buyer = Membership.Friends
-        private set
+    private val _membership = mutableStateOf(data.membership)
+    val membership: State<Membership> by ::_membership
 
     val id: ObjectId
         get() = data.id
@@ -281,7 +284,7 @@ class GameState(private val data: GameStateData) {
             _pepperInventory[plantType] = StockLevel(quantity = 0)
             data.balance = data.balance.copy(
                 total = data.balance.total
-                    .plus(buyer.total(plantType = plantType, quantity = it.quantity))
+                    .plus(membership.value.total(plantType = plantType, quantity = it.quantity))
             )
             _balance.postValue(data.balance)
         }
@@ -292,7 +295,7 @@ class GameState(private val data: GameStateData) {
             _distillateInventory[distillate] = it.copy(quantity = 0)
             data.balance = data.balance.copy(
                 total = data.balance.total
-                    .plus(buyer.total(distillate = distillate, quantity = it.quantity))
+                    .plus(membership.value.total(distillate = distillate, quantity = it.quantity))
             )
             _balance.postValue(data.balance)
         }
@@ -316,6 +319,13 @@ class GameState(private val data: GameStateData) {
         if (deductPurchaseCost(desiredTool)) {
             data.tool = desiredTool
             _tool.value = desiredTool
+        }
+    }
+
+    fun buyMembershipUpgrade(desiredMembership: Membership) {
+        if (deductPurchaseCost(desiredMembership)) {
+            data.membership = desiredMembership
+            _membership.value = desiredMembership
         }
     }
 
@@ -396,6 +406,11 @@ class GameState(private val data: GameStateData) {
 
         if (totalScovilles < distillate.requiredScovilles.count) {
             return
+        }
+
+        if (distillate == Distillate.QuantumCapsicum) {
+            data.qcapsPurchased += 1
+            _qcapsPurchased.value += 1
         }
 
         var requiredScovilles = distillate.requiredScovilles.count

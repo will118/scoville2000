@@ -24,6 +24,7 @@ data class AutoPlantChecked(val plantType: PlantType, val checked: Boolean) : Ga
 data class PlantSeed(val seed: Seed) : GameOperation
 data class UpgradeLight(val light: Light) : GameOperation
 data class UpgradeMedium(val medium: Medium) : GameOperation
+data class UpgradeMembership(val membership: Membership) : GameOperation
 data class UpgradeArea(val area: Area) : GameOperation
 data class UpgradeTool(val tool: Tool) : GameOperation
 data class Distill(val distillate: Distillate) : GameOperation
@@ -37,7 +38,7 @@ class GameStateExecutor(
 ) {
     companion object {
         const val TICK_PERIOD_MS = 200L
-        const val SAVE_PERIOD_MS = 1_000L
+        const val SAVE_PERIOD_MS = 10_000L
     }
 
     private val channel = Channel<GameOperation>(Channel.UNLIMITED)
@@ -61,6 +62,7 @@ class GameStateExecutor(
             is UpgradeMedium -> gameState.buyMediumUpgrade(operation.medium)
             is UpgradeArea -> gameState.buyAreaUpgrade(operation.area)
             is UpgradeTool -> gameState.buyToolUpgrade(operation.tool)
+            is UpgradeMembership -> gameState.buyMembershipUpgrade(operation.membership)
             is PurchaseTechnology -> gameState.buyTechnology(operation.technology)
             is AutoPlantChecked -> gameState.autoPlantChecked(operation.plantType, operation.checked)
             is ToggleAutoHarvesting -> gameState.toggleAutoHarvesting()

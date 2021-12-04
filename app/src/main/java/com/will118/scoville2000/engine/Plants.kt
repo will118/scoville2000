@@ -32,7 +32,8 @@ data class PlantType(
         val BellPepper = PlantType(
             displayName = "Bell Pepper",
             chromosome = Chromosome(
-                pepperYield = Gene.withOneBits(bitCount = 4, random = geneRandom)
+                pepperYield = Gene.withOneBits(bitCount = 10, random = geneRandom),
+                pepperSize = Gene.withOneBits(bitCount = 40),
             ),
             id = 1,
             isDefault = true,
@@ -41,7 +42,8 @@ data class PlantType(
             displayName = "Poblano",
             chromosome = Chromosome(
                 scovilleCount = Gene.withOneBits(bitCount = 2, random = geneRandom),
-                pepperYield = Gene.withOneBits(bitCount = 3, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 15, random = geneRandom),
+                pepperSize = Gene.withOneBits(bitCount = 10),
             ),
             id = 2,
             isDefault = true,
@@ -50,7 +52,8 @@ data class PlantType(
             displayName = "Guajillo",
             chromosome = Chromosome(
                 scovilleCount = Gene.withOneBits(bitCount = 3, random = geneRandom),
-                pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 10, random = geneRandom),
+                pepperSize = Gene.withOneBits(bitCount = 5),
             ),
             id = 3,
             isDefault = true,
@@ -59,7 +62,8 @@ data class PlantType(
             displayName = "Jalapeño",
             chromosome = Chromosome(
                 scovilleCount = Gene.withOneBits(bitCount = 4, random = geneRandom),
-                pepperYield = Gene.withOneBits(bitCount = 2, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 10, random = geneRandom),
+                pepperSize = Gene.withOneBits(bitCount = 4),
             ),
             id = 4,
             isDefault = true,
@@ -68,7 +72,8 @@ data class PlantType(
             displayName = "Bird's Eye",
             chromosome = Chromosome(
                 scovilleCount = Gene.withOneBits(bitCount = 8, random = geneRandom),
-                pepperYield = Gene.withOneBits(bitCount = 1, random = geneRandom),
+                pepperYield = Gene.withOneBits(bitCount = 5, random = geneRandom),
+                pepperSize = Gene.withOneBits(bitCount = 1),
             ),
             id = 5,
             isDefault = true,
@@ -85,7 +90,7 @@ data class PlantType(
 
     val yield: Long
         get() {
-            return chromosome.pepperYield.popCount() * 10L
+            return chromosome.pepperYield.popCount() * 2L
         }
 
     val size: Long

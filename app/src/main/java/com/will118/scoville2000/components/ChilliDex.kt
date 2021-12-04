@@ -83,7 +83,7 @@ fun ChilliDex(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(6.dp)
-                        .clickable { },
+                        .clickable { plantType?.let { plantSeed(it.toSeed()) } },
                     elevation = 10.dp
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
@@ -97,10 +97,22 @@ fun ChilliDex(
                                     style = Typography.h6.merge(SpanStyle(color = Color.LightGray)),
                                 )
                             } else {
-                                Text(
-                                    text = "${plantType.displayName}",
-                                    style = Typography.h6,
-                                )
+                                Column(
+                                    modifier = Modifier.padding(top = 5.dp)
+                                ) {
+                                    Text(
+                                        text = "${plantType.displayName}",
+                                        style = Typography.h6,
+                                    )
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    Text(
+                                        text = plantType.lineage?.let {
+                                            "${it.first.displayName} x ${it.second.displayName}"
+                                        } ?: "Unknown",
+                                        style = Typography.overline,
+                                        modifier = Modifier.padding(start = 1.dp)
+                                    )
+                                }
 
                                 if (autoPlantTechnologyCapable) {
                                     Spacer(modifier = Modifier.weight(1.0f))
@@ -130,16 +142,8 @@ fun ChilliDex(
                                     .padding(15.dp)
                                     .weight(1.0f)
                             ) {
+                                Spacer(modifier = Modifier.height(15.dp))
                                 if (plantType != null) {
-                                    Spacer(modifier = Modifier.height(5.dp))
-                                    StatText(
-                                        name = "Lineage",
-                                        value = plantType.lineage?.let {
-                                            "${it.first.displayName} x ${it.second.displayName}"
-                                        } ?: "Unknown",
-                                        size = 12.sp,
-                                    )
-                                    Spacer(modifier = Modifier.height(5.dp))
                                     StatText(
                                         name = "Scovilles",
                                         value = plantType.scovilles.toString(),

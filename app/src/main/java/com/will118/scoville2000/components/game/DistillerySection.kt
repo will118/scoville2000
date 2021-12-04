@@ -24,7 +24,7 @@ fun DistillerySection(
         Table(
             columns = listOf(
                 TableColumn(header = "Distillate"),
-                TableColumn(header = "Required SHU"),
+                TableColumn(header = "Required SHU"), // TODO make cost more
                 TableColumn(header = "", weight = 0.75f),
             ),
             items = Distillate.values().asSequence(),
