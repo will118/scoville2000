@@ -128,7 +128,7 @@ class MainActivity : ComponentActivity() {
                             ChilliDex(
                                 objectStateId = game.state.id,
                                 gameStateExecutor = game.executor,
-                                currentPlantTypes = game.state.plantTypes,
+                                plantTypes = game.state.plantTypes,
                                 plantSeed = { game.executor.enqueueSync(PlantSeed(it)) },
                                 autoPlantTechnologyCapable = game.state
                                     .technologies

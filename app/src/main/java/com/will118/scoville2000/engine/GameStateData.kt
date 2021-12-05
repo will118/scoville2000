@@ -38,8 +38,6 @@ data class GameStateData(
     val distillates: List<Distillate> = emptyList(),
     val distillateInventory: List<Pair<DistillateType, FractionalStockLevel>> = emptyList(),
     val technologies: List<Technology> = emptyList(),
-    val plantTypes: List<PlantType> = listOf(
-        PlantType.BellPepper,
-    ),
+    val plantTypes: List<PlantType> = PlantType.allPlants(),
     val geneticComputationState: GeneticComputationState = GeneticComputationState.default()
 )

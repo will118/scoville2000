@@ -296,7 +296,6 @@ data class GeneticComputationState(
             displayName = name,
             id = random.plantId(),
             autoPlantChecked = false,
-            isDefault = false,
         )
     }
 

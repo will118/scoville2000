@@ -33,7 +33,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 fun ChilliDex(
     objectStateId: ObjectId,
     gameStateExecutor: GameStateExecutor,
-    currentPlantTypes: SnapshotStateList<PlantType>,
+    plantTypes: SnapshotStateList<PlantType>,
     plantSeed: (Seed) -> Unit,
     autoPlantTechnologyCapable: Boolean,
     autoPlantChecked: (PlantType, Boolean) -> Unit,
@@ -60,7 +60,7 @@ fun ChilliDex(
                 )
                 Spacer(modifier = Modifier.weight(1.0f))
                 Text(
-                    text = "${currentPlantTypes.size}/${PlantType.TOTAL_PEPPER_TYPES}",
+                    text = "${plantTypes.count { it.visible }}/${plantTypes.size}",
                     modifier = Modifier.padding(
                         start = 15.dp,
                         top = 10.dp,
@@ -72,14 +72,8 @@ fun ChilliDex(
             }
         }
 
-        // TODO: mix in
-       val plantsWithEmpties = currentPlantTypes
-           .plus(sequence<PlantType?> { while (true) yield(null) }
-               .take(PlantType.TOTAL_PEPPER_TYPES - currentPlantTypes.size)
-           )
-
         LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(plantsWithEmpties) { plantType ->
+            items(plantTypes) { plantType ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -95,7 +89,7 @@ fun ChilliDex(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            if (plantType == null) {
+                            if (!plantType.visible) {
                                 Text(
                                     text = "???",
                                     style = Typography.h6.merge(SpanStyle(color = Color.LightGray)),
@@ -144,7 +138,7 @@ fun ChilliDex(
                                     .weight(1.0f)
                             ) {
                                 Spacer(modifier = Modifier.height(15.dp))
-                                if (plantType != null) {
+                                if (plantType.visible) {
                                     StatText(
                                         name = "Scovilles",
                                         value = plantType.scovilles.toString(),

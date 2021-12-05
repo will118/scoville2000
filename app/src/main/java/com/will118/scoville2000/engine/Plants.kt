@@ -13,15 +13,12 @@ data class PlantType(
     override val displayName: String,
     val chromosome: Chromosome,
     val autoPlantChecked: Boolean = false,
+    val visible: Boolean = false,
     val id: Int,
     val lineage: Pair<PlantType, PlantType>? = null,
-    val isDefault: Boolean = false,
 ): Describe, Purchasable {
     companion object {
-        val TOTAL_PEPPER_TYPES = 5 + NAMES.totalCombinations
         private const val MIN_GROWTH = 0.25f
-
-        fun SerializableRandom.plantId() = this.nextInt(5, Int.MAX_VALUE)
 
         private val geneRandom = Random(118) // have this the same across games
 
@@ -32,7 +29,6 @@ data class PlantType(
                 pepperSize = Gene.withOneBits(bitCount = 40),
             ),
             id = 1,
-            isDefault = true,
         )
         val Poblano = PlantType(
             displayName = "Poblano",
@@ -42,7 +38,6 @@ data class PlantType(
                 pepperSize = Gene.withOneBits(bitCount = 10),
             ),
             id = 2,
-            isDefault = true,
         )
         val Guajillo = PlantType(
             displayName = "Guajillo",
@@ -52,7 +47,6 @@ data class PlantType(
                 pepperSize = Gene.withOneBits(bitCount = 5),
             ),
             id = 3,
-            isDefault = true,
         )
         val Jalapeno = PlantType(
             displayName = "Jalapeño",
@@ -62,7 +56,6 @@ data class PlantType(
                 pepperSize = Gene.withOneBits(bitCount = 4),
             ),
             id = 4,
-            isDefault = true,
         )
         val BirdsEye = PlantType(
             displayName = "Bird's Eye",
@@ -72,8 +65,51 @@ data class PlantType(
                 pepperSize = Gene.withOneBits(bitCount = 1),
             ),
             id = 5,
-            isDefault = true,
         )
+
+        object NAMES {
+            // Shouldn't really be about how spicy
+            val adjectives = listOf(
+                "Spotted", // 0
+                "Warm", // 1
+                "Spicy", // 2
+                "Enduring", // 3
+                "Fearsome", // 4
+                "Volcanic", // 5
+                "Ancient", // 6
+                "Infernal", // 7
+            )
+
+            // More about how spicy the pepper is
+            val peppers = listOf(
+                "Pepper", // 0
+                "Wiggler", // 1
+                "Tickler", // 2
+                "Scorcher", // 3
+                "Fireball", // 4
+                "Dragon", // 5
+            )
+
+            val totalCombinations = adjectives.size * peppers.size
+        }
+
+        fun allPlants(): List<PlantType> {
+            return listOf(
+                BellPepper,
+                Poblano,
+                Guajillo,
+                Jalapeno,
+                BirdsEye,
+            ) + NAMES.peppers.flatMapIndexed { i, pepper ->
+                NAMES.adjectives.mapIndexed { j, adj ->
+                    PlantType(
+                        displayName = "$adj $pepper",
+                        chromosome = Chromosome(),
+                        id = 6 + ((i * NAMES.adjectives.size) + j),
+                    )
+                }
+            }
+        }
     }
 
     override val cost = Currency(total = chromosome.totalPopCount.toLong())
