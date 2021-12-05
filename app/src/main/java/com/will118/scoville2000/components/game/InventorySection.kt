@@ -14,18 +14,15 @@ import androidx.compose.ui.unit.dp
 import com.will118.scoville2000.components.Table
 import com.will118.scoville2000.components.TableCellText
 import com.will118.scoville2000.components.TableColumn
-import com.will118.scoville2000.engine.Distillate
-import com.will118.scoville2000.engine.FractionalStockLevel
-import com.will118.scoville2000.engine.PlantType
-import com.will118.scoville2000.engine.StockLevel
+import com.will118.scoville2000.engine.*
 import com.will118.scoville2000.ui.theme.Typography
 
 @ExperimentalFoundationApi
 @Composable
 fun InventorySection(
-    distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel>,
+    distillateInventory: SnapshotStateMap<DistillateType, FractionalStockLevel>,
     pepperInventory: SnapshotStateMap<PlantType, StockLevel>,
-    sellDistillate: (Distillate) -> Unit,
+    sellDistillate: (DistillateType) -> Unit,
     sellPeppers: (PlantType) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -50,7 +47,7 @@ fun InventorySection(
         )
 
         val distillates = distillateInventory
-            .filter { it.value.quantity > 0 && it.key != Distillate.QuantumCapsicum }
+            .filter { it.value.quantity > 0 && it.key != Distillate.QuantumCapsicum.type }
 
         if (distillates.isNotEmpty()) {
             Spacer(modifier = Modifier.height(10.dp))

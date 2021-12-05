@@ -15,7 +15,7 @@ object Save : GameOperation
 data class SellPeppers(val plantType: PlantType) : GameOperation
 data class SetLeftGeneticCross(val plantType: PlantType) : GameOperation
 data class SetRightGeneticCross(val plantType: PlantType) : GameOperation
-data class SellDistillate(val distillate: Distillate) : GameOperation
+data class SellDistillate(val distillate: DistillateType) : GameOperation
 object ToggleAutoHarvesting : GameOperation
 object ToggleComputation : GameOperation
 object ResetComputation : GameOperation

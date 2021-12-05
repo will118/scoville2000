@@ -30,7 +30,8 @@ fun Game(
     tool: Tool,
     technologyLevel: TechnologyLevel,
     plantPots: SnapshotStateList<PlantPot>,
-    distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel>,
+    distillates: SnapshotStateList<Distillate>,
+    distillateInventory: SnapshotStateMap<DistillateType, FractionalStockLevel>,
     pepperInventory: SnapshotStateMap<PlantType, StockLevel>,
     technologies: SnapshotStateList<Technology>,
     plantTypes: SnapshotStateList<PlantType>,
@@ -38,7 +39,7 @@ fun Game(
     autoPlantChecked: (PlantType, Boolean) -> Unit,
     navigateToChilliDex: () -> Unit,
     onPlantPotTap: (PlantPot) -> Unit,
-    sellDistillate: (Distillate) -> Unit,
+    sellDistillate: (DistillateType) -> Unit,
     sellPeppers: (PlantType) -> Unit,
     setLeftGeneticsPlantType: (PlantType) -> Unit,
     setRightGeneticsPlantType: (PlantType) -> Unit,
@@ -92,6 +93,7 @@ fun Game(
         )
         Divider(modifier = dividerPadding)
         ShopSection(
+            balance = balance,
             currentLight = light,
             currentArea = area,
             currentMedium = medium,
@@ -116,6 +118,7 @@ fun Game(
             if (visibleTechs.isNotEmpty()) {
                 Divider(modifier = dividerPadding)
                 TechSection(
+                    balance = balance,
                     visibleTechnologies = visibleTechs,
                     purchaseTechnology = purchaseTechnology,
                 )
@@ -124,6 +127,8 @@ fun Game(
         if (technologies.contains(Technology.ScovilleDistillery)) {
             Divider(modifier = dividerPadding)
             DistillerySection(
+                pepperInventory = pepperInventory,
+                distillates = distillates,
                 distill = distill,
             )
         }

@@ -18,7 +18,7 @@ data class ObjectId(val hi: Long, val lo: Long) {
 @Serializable
 data class GameStateData(
     val id: ObjectId = ObjectId.random(),
-//    var balance: Currency = Currency(80),
+//    var balance: Currency = Currency(90),
     var balance: Currency = Currency(80000000000000000),
     var area: Area = Area.WindowSill,
     var light: Light = Light.Ambient,
@@ -35,7 +35,8 @@ data class GameStateData(
     val pepperInventory: List<Pair<PlantType, StockLevel>> = listOf(
         Pair(PlantType.BellPepper, StockLevel(quantity = 5)),
     ),
-    val distillateInventory: List<Pair<Distillate, FractionalStockLevel>> = emptyList(),
+    val distillates: List<Distillate> = emptyList(),
+    val distillateInventory: List<Pair<DistillateType, FractionalStockLevel>> = emptyList(),
     val technologies: List<Technology> = emptyList(),
     val plantTypes: List<PlantType> = listOf(
         PlantType.BellPepper,

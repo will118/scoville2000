@@ -86,6 +86,38 @@ class GameState(private val data: GameStateData) {
         ),
     )
 
+    private fun distillateProgression(
+        distillate: Distillate,
+        condition: () -> Boolean,
+    ): () -> Boolean {
+        return {
+            when {
+                _distillates.any { it.displayName == distillate.displayName } -> true
+                condition() -> {
+                    _distillates.add(distillate)
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    // These need to be idempotent as not persisted.
+    private val distillateStack = mutableListOf(
+        distillateProgression(
+            distillate = Distillate.HotSauce,
+            condition = {
+                _distillateInventory[Distillate.ChilliOil.type]?.let { it.quantity >= 1 } ?: false
+            },
+        ),
+        distillateProgression(
+            distillate = Distillate.QuantumCapsicum,
+            condition = {
+                _distillateInventory[Distillate.HotSauce.type]?.let { it.quantity >= 1 } ?: false
+            },
+        ),
+    )
+
     private fun plantTypeProgression(
         plantType: PlantType,
         millisElapsed: Long? = null,
@@ -128,8 +160,11 @@ class GameState(private val data: GameStateData) {
     private val _pepperInventory = data.pepperInventory.toMutableStateMap()
     val pepperInventory: SnapshotStateMap<PlantType, StockLevel> by ::_pepperInventory
 
+    private val _distillates = data.distillates.toMutableStateList()
+    val distillates: SnapshotStateList<Distillate> by ::_distillates
+
     private val _distillateInventory = data.distillateInventory.toMutableStateMap()
-    val distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel> by ::_distillateInventory
+    val distillateInventory: SnapshotStateMap<DistillateType, FractionalStockLevel> by ::_distillateInventory
 
     private val _area = mutableStateOf(data.area)
     val area: State<Area> by ::_area
@@ -151,9 +186,6 @@ class GameState(private val data: GameStateData) {
 
     private val _tool = mutableStateOf(data.tool)
     val tool: State<Tool> by ::_tool
-
-    private val _qcapsPurchased = mutableStateOf(data.qcapsPurchased)
-    val qcapsPurchased: State<Long> by ::_qcapsPurchased
 
     private val _technologyLevel = mutableStateOf(data.technologyLevel)
     val technologyLevel: State<TechnologyLevel> by ::_technologyLevel
@@ -290,12 +322,12 @@ class GameState(private val data: GameStateData) {
         }
     }
 
-    fun sellDistillate(distillate: Distillate) {
-        _distillateInventory[distillate]?.let {
-            _distillateInventory[distillate] = it.copy(quantity = 0)
+    fun sellDistillate(distillateType: DistillateType) {
+        _distillateInventory[distillateType]?.let {
+            _distillateInventory[distillateType] = it.copy(quantity = 0)
             data.balance = data.balance.copy(
                 total = data.balance.total
-                    .plus(membership.value.total(distillate = distillate, quantity = it.quantity))
+                    .plus(membership.value.total(distillateType = distillateType, quantity = it.quantity))
             )
             _balance.postValue(data.balance)
         }
@@ -332,8 +364,12 @@ class GameState(private val data: GameStateData) {
     fun buyTechnology(desiredTechnology: Technology) {
         if (deductPurchaseCost(desiredTechnology)) {
             _technologies.add(desiredTechnology)
-            if (desiredTechnology == Technology.AutoHarvester) {
-                toggleAutoHarvesting()
+            when (desiredTechnology) {
+                Technology.AutoHarvester -> toggleAutoHarvesting()
+                Technology.ScovilleDistillery -> {
+                    // Enable ChilliOil distilling
+                    _distillates.add(Distillate.ChilliOil)
+                }
             }
         }
     }
@@ -401,19 +437,11 @@ class GameState(private val data: GameStateData) {
     }
 
     fun distill(distillate: Distillate) {
-        val totalScovilles = _pepperInventory.entries
-            .sumOf { it.key.scovilles.count * it.value.quantity * it.key.size }
-
-        if (totalScovilles < distillate.requiredScovilles.count) {
+        if (_pepperInventory.totalScovilles() < distillate.requiredScovilles) {
             return
         }
 
-        if (distillate == Distillate.QuantumCapsicum) {
-            data.qcapsPurchased += 1
-            _qcapsPurchased.value += 1
-        }
-
-        var requiredScovilles = distillate.requiredScovilles.count
+        var requiredScovilles = distillate.requiredScovilles
 
         loop@for (plantType in _pepperInventory.keys) {
             val stock = _pepperInventory[plantType]!!
@@ -423,16 +451,18 @@ class GameState(private val data: GameStateData) {
                     _pepperInventory[plantType] = StockLevel(
                         quantity = stock.quantity - consumed
                     )
-                    break@loop;
+                    break@loop
                 }
             }
             _pepperInventory[plantType] = StockLevel(quantity = 0)
         }
 
-        _distillateInventory.compute(distillate) { _, stock ->
+        _distillateInventory.compute(distillate.type) { _, stock ->
             stock?.copy(quantity = stock.quantity + 1)
                 ?: FractionalStockLevel(quantity = 1, thousandths = 0)
         }
+
+        _distillates[_distillates.indexOf(distillate)] = distillate.next()
     }
 
     fun toggleAutoHarvesting() {
@@ -504,26 +534,26 @@ class GameState(private val data: GameStateData) {
         val qcapCostThousandths = 100
 
         val quantumCaps = _distillateInventory.getOrDefault(
-            Distillate.QuantumCapsicum,
+            Distillate.QuantumCapsicum.type,
             FractionalStockLevel(quantity = 0, thousandths = 0),
         )
 
         when {
             quantumCaps.thousandths > qcapCostThousandths -> {
-                _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                _distillateInventory[Distillate.QuantumCapsicum.type] = quantumCaps.copy(
                     thousandths = quantumCaps.thousandths - qcapCostThousandths
                 )
                 runGenetics()
             }
             quantumCaps.thousandths == qcapCostThousandths && quantumCaps.quantity > 0 -> {
-                _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                _distillateInventory[Distillate.QuantumCapsicum.type] = quantumCaps.copy(
                     quantity = quantumCaps.quantity - 1,
                     thousandths = 1000,
                 )
                 runGenetics()
             }
             quantumCaps.quantity > 0 -> {
-                _distillateInventory[Distillate.QuantumCapsicum] = quantumCaps.copy(
+                _distillateInventory[Distillate.QuantumCapsicum.type] = quantumCaps.copy(
                     quantity = quantumCaps.quantity - 1,
                     thousandths = quantumCaps.thousandths + 1000 - qcapCostThousandths,
                 )
@@ -585,6 +615,7 @@ class GameState(private val data: GameStateData) {
 
             progressionStack.tryPop()
             plantTypeStack.tryPop()
+            distillateStack.tryPop()
 
             maybeRunGenetics()
         }
@@ -595,9 +626,13 @@ class GameState(private val data: GameStateData) {
     fun snapshot() = data.copy(
         plantPots = _plantPots.toList(),
         pepperInventory = _pepperInventory.toList(),
+        distillates = _distillates.toList(),
         distillateInventory = _distillateInventory.toList(),
         technologies = _technologies.toList(),
         plantTypes = _plantTypes.toList(),
         geneticComputationState = _geneticComputationState.value.snapshot(),
     )
 }
+
+fun SnapshotStateMap<PlantType, StockLevel>.totalScovilles() = entries
+    .sumOf { it.key.scovilles.count * it.value.quantity * it.key.size }

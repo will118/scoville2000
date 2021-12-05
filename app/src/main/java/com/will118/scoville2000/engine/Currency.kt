@@ -7,4 +7,6 @@ data class Currency(val total: Long) {
     override fun toString(): String {
         return "₡${fmtLong(total)}"
     }
+
+    fun canAfford(price: Currency) = total >= price.total
 }

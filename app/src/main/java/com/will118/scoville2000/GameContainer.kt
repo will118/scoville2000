@@ -36,6 +36,7 @@ fun GameContainer(
         light = gameState.light.value,
         medium = gameState.medium.value,
         plantPots = gameState.plantPots,
+        distillates = gameState.distillates,
         distillateInventory = gameState.distillateInventory,
         pepperInventory = gameState.pepperInventory,
         tool = gameState.tool.value,

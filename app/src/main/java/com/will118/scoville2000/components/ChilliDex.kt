@@ -72,6 +72,7 @@ fun ChilliDex(
             }
         }
 
+        // TODO: mix in
        val plantsWithEmpties = currentPlantTypes
            .plus(sequence<PlantType?> { while (true) yield(null) }
                .take(PlantType.TOTAL_PEPPER_TYPES - currentPlantTypes.size)
@@ -82,13 +83,16 @@ fun ChilliDex(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(6.dp)
+                        .padding(8.dp)
                         .clickable { plantType?.let { plantSeed(it.toSeed()) } },
                     elevation = 10.dp
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(25.dp)
+                    ) {
                         Row(
-                            modifier = Modifier.padding(start = 15.dp, top = 5.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (plantType == null) {
@@ -97,9 +101,7 @@ fun ChilliDex(
                                     style = Typography.h6.merge(SpanStyle(color = Color.LightGray)),
                                 )
                             } else {
-                                Column(
-                                    modifier = Modifier.padding(top = 5.dp)
-                                ) {
+                                Column {
                                     Text(
                                         text = "${plantType.displayName}",
                                         style = Typography.h6,
@@ -139,7 +141,6 @@ fun ChilliDex(
                         Row {
                             Column(
                                 modifier = Modifier
-                                    .padding(15.dp)
                                     .weight(1.0f)
                             ) {
                                 Spacer(modifier = Modifier.height(15.dp))
@@ -176,13 +177,13 @@ fun ChilliDex(
                                 }
                             }
 
-                            Box(modifier = Modifier
-                                .height(160.dp)
-                                .padding(bottom = 10.dp, end = 10.dp)
-                                .align(Alignment.CenterVertically)
-                                .aspectRatio(1.0f)) {
-                                plantType.renderIcon()
-                            }
+//                            Box(modifier = Modifier
+//                                .height(160.dp)
+//                                .padding(bottom = 10.dp, end = 10.dp)
+//                                .align(Alignment.CenterVertically)
+//                                .aspectRatio(1.0f)) {
+//                                plantType.renderIcon()
+//                            }
                         }
 
                     }

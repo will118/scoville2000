@@ -8,11 +8,13 @@ import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.will118.scoville2000.engine.Currency
 import com.will118.scoville2000.engine.Technology
 import com.will118.scoville2000.ui.theme.Typography
 
 @Composable
 fun TechSection(
+    balance: Currency,
     visibleTechnologies: List<Technology>,
     purchaseTechnology: (Technology) -> Unit,
 ) {
@@ -23,7 +25,10 @@ fun TechSection(
             items = visibleTechnologies.asSequence(),
             tableCellHeight = 45.dp
         ) {
-            TextButton(onClick = { purchaseTechnology(it) }) {
+            TextButton(
+                enabled = balance.canAfford(it.cost!!),
+                onClick = { purchaseTechnology(it) },
+            ) {
                 Text(text = "Buy")
             }
         }

@@ -71,6 +71,7 @@ private fun SeedTable(
 
 @Composable
 fun ShopSection(
+    balance: Currency,
     currentLight: Light,
     currentArea: Area,
     currentMembership: Membership,
@@ -100,7 +101,10 @@ fun ShopSection(
             ShopTable(
                 items = products.asSequence()
             ) {
-                TextButton(onClick = { onClick(it) }) {
+                TextButton(
+                    enabled = balance.canAfford(it.cost!!),
+                    onClick = { onClick(it) },
+                ) {
                     Text(
                         text = buttonText,
                     )

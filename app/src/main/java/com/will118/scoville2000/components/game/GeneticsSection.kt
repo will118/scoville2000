@@ -24,14 +24,14 @@ fun GeneticsSection(
     geneticComputationState: GeneticComputationState,
     setLeftPlantType: (PlantType) -> Unit,
     setRightPlantType: (PlantType) -> Unit,
-    distillateInventory: SnapshotStateMap<Distillate, FractionalStockLevel>,
+    distillateInventory: SnapshotStateMap<DistillateType, FractionalStockLevel>,
     plantTypes: SnapshotStateList<PlantType>,
     updateFitnessSlider: (GeneticTrait, Float) -> Unit,
     toggleComputation: () -> Unit,
     resetComputation: () -> Unit,
 ) {
     val quantumCaps = distillateInventory.getOrDefault(
-        Distillate.QuantumCapsicum,
+        Distillate.QuantumCapsicum.type,
         FractionalStockLevel(quantity = 0, thousandths = 0),
     )
 

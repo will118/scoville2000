@@ -17,10 +17,6 @@ data class PlantType(
     val lineage: Pair<PlantType, PlantType>? = null,
     val isDefault: Boolean = false,
 ): Describe, Purchasable {
-    override val cost = Currency(
-        total = chromosome.totalPopCount.toDouble().pow(2.0).toLong()
-    )
-
     companion object {
         val TOTAL_PEPPER_TYPES = 5 + NAMES.totalCombinations
         private const val MIN_GROWTH = 0.25f
@@ -79,6 +75,8 @@ data class PlantType(
             isDefault = true,
         )
     }
+
+    override val cost = Currency(total = chromosome.totalPopCount.toLong())
 
     private val growthDuration: Float
         get() {
